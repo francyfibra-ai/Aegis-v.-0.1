@@ -25,7 +25,7 @@ const BASE = new URL('./', self.location).pathname
 
 // Cambia questo numero ogni volta che modifichi il file:
 // serve ad Android per accorgersi che c'e' una versione nuova.
-const VERSIONE = 'aegis-sw-v3'
+const VERSIONE = 'aegis-sw-v4'
 
 // --- 1. Installazione -------------------------------------------------
 // Viene eseguita la prima volta che il service worker viene registrato.
@@ -129,8 +129,16 @@ self.addEventListener('notificationclick', (event) => {
 
       for (const finestra of finestre) {
         if ('focus' in finestra) {
-          // Avvisa l'app gia' aperta di cosa e' stato premuto
-          finestra.postMessage({ tipo: 'risposta-notifica', azione, dati })
+          // Avvisa l'app gia' aperta di cosa e' stato premuto.
+          // "origine" serve a capire, in caso di risposta sbagliata, se
+          // il valore arriva da qui o dall'indirizzo: sono due percorsi
+          // diversi e si sbagliano in modi diversi.
+          finestra.postMessage({
+            tipo: 'risposta-notifica',
+            azione,
+            origine: 'messaggio',
+            dati,
+          })
           return finestra.focus()
         }
       }

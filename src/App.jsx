@@ -21,6 +21,12 @@ const VISTE = [
   { id: 'setup', nome: 'Setup', emoji: '⚙️' },
 ]
 
+/* Da dove e' arrivata la risposta: due percorsi diversi, due modi
+   diversi di sbagliarsi. */
+function rispotaOrigine(risposta) {
+  return risposta.origine === 'indirizzo' ? 'app riaperta' : 'app gia\' aperta'
+}
+
 export default function App() {
   // Quale schermata e' visibile: vedi VISTE qui sopra
   const [schermata, setSchermata] = useState('piano')
@@ -39,7 +45,7 @@ export default function App() {
 
   // Messaggio mostrato quando si risponde a una notifica.
   // Dalla Fase 5 la risposta verra' salvata davvero nello storico.
-  const [rispostaNotifica, setRispostaNotifica] = useState('')
+  const [rispostaNotifica, setRispostaNotifica] = useState(null)
 
   // --- Accesso: leggiamo la situazione all'avvio e restiamo in ascolto ---
   useEffect(() => {
@@ -73,7 +79,12 @@ export default function App() {
     // Caso 1: l'app era gia' aperta e il service worker ci avvisa
     function ascoltaServiceWorker(evento) {
       if (evento.data?.tipo === 'risposta-notifica') {
-        setRispostaNotifica(evento.data.azione)
+        // Registriamo anche da dove arriva: serve a distinguere un
+        // errore nostro da un pulsante riportato male da Android.
+        setRispostaNotifica({
+          azione: evento.data.azione,
+          origine: evento.data.origine || 'messaggio',
+        })
       }
     }
     navigator.serviceWorker?.addEventListener('message', ascoltaServiceWorker)
@@ -83,7 +94,7 @@ export default function App() {
     const parametri = new URLSearchParams(window.location.search)
 
     if (parametri.get('risposta')) {
-      setRispostaNotifica(parametri.get('risposta'))
+      setRispostaNotifica({ azione: parametri.get('risposta'), origine: 'indirizzo' })
     }
 
     // La notifica del peso porta direttamente sulla schermata giusta,
@@ -119,8 +130,15 @@ export default function App() {
 
       {rispostaNotifica && (
         <p className="messaggio">
-          Hai risposto «{rispostaNotifica}». Dalla Fase 5 finirà nello storico.{' '}
-          <button className="pulsante-testo" onClick={() => setRispostaNotifica('')}>
+          Android ha riportato il pulsante «<strong>{rispostaNotifica.azione}</strong>».
+          Dalla Fase 5 finirà nello storico.
+          <br />
+          <span className="nota">
+            Se non è il pulsante che hai premuto, dimmelo: significa che il
+            telefono riporta l'azione sbagliata, e va gestito prima di
+            registrare le risposte davvero. (origine: {rispotaOrigine(rispostaNotifica)})
+          </span>{' '}
+          <button className="pulsante-testo" onClick={() => setRispostaNotifica(null)}>
             ok
           </button>
         </p>

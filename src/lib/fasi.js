@@ -27,13 +27,13 @@ export const FASI = [
   {
     numero: 4,
     titolo: 'Notifiche push',
-    stato: 'in-corso',
+    stato: 'fatto',
     descrizione: 'Promemoria automatici agli orari del piano, anche ad app chiusa.',
   },
   {
     numero: 5,
     titolo: 'Conferma Fatto / Saltato',
-    stato: 'da-fare',
+    stato: 'in-corso',
     descrizione:
       'Rispondere dalla notifica e costruire lo storico nel tempo. Per il peso, inserire i chili.',
   },
