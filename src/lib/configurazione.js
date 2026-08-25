@@ -29,7 +29,7 @@
 export const SUPABASE_URL = 'https://zikfldmqdsacywvxiuab.supabase.co'
 
 // Chiave pubblica, indicata come "anon public" oppure "publishable"
-export const SUPABASE_CHIAVE_PUBBLICA = ''
+export const SUPABASE_CHIAVE_PUBBLICA = 'sb_publishable_enjVIUKuaDY_bBvJeK0NNw_8wv65exW'
 
 /**
  * Dice se i due valori sono stati inseriti.
