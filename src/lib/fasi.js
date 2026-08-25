@@ -8,13 +8,13 @@ export const FASI = [
   {
     numero: 1,
     titolo: 'Setup del progetto',
-    stato: 'in-corso',
+    stato: 'fatto',
     descrizione: 'Struttura base, app installabile sul telefono, account da creare.',
   },
   {
     numero: 2,
     titolo: 'Schermata piano settimanale',
-    stato: 'da-fare',
+    stato: 'in-corso',
     descrizione: 'Inserire e modificare allenamenti e pasti, giorno per giorno.',
   },
   {

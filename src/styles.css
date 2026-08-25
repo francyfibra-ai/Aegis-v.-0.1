@@ -160,3 +160,279 @@ h2 { font-size: 16px; margin: 0 0 4px; }
   letter-spacing: 0.5px;
   color: var(--testo-tenue);
 }
+
+/* ==================================================================
+   FASE 2 - Piano settimanale
+   ================================================================== */
+
+h3 { font-size: 15px; margin: 0; }
+
+/* Lascia spazio in fondo alla pagina per la barra di navigazione */
+.schermata { padding-bottom: 92px; }
+
+.riga-titolo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.errore {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.35);
+  font-size: 14px;
+  color: #ffc9c9;
+}
+
+.vuoto p { margin: 0; font-size: 14px; color: var(--testo-tenue); }
+
+/* --- Scheda di un giorno --------------------------------------- */
+.giorno { padding: 12px 14px; }
+
+/* Il giorno di oggi ha il bordo colorato */
+.giorno.oggi { border-color: var(--accento); }
+
+.intestazione-giorno {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.pillola {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accento);
+  color: #04121f;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  vertical-align: middle;
+}
+
+/* Il pulsante tondo "+" per aggiungere un evento al giorno */
+.pulsante-tondo {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid var(--bordo);
+  background: #1f2c3a;
+  color: var(--testo);
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+}
+.pulsante-tondo:active { background: var(--accento); color: #04121f; }
+
+/* --- Elenco degli eventi di un giorno --------------------------- */
+.lista-eventi { list-style: none; margin: 8px 0 0; padding: 0; }
+
+/* Ogni evento e' un pulsante: toccandolo si apre la modifica */
+.evento {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 0;
+  border: none;
+  border-top: 1px solid var(--bordo);
+  background: none;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.lista-eventi li:first-child .evento { border-top: none; }
+
+.orario {
+  flex: 0 0 auto;
+  width: 46px;
+  font-variant-numeric: tabular-nums; /* cifre tutte della stessa larghezza */
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--testo-tenue);
+}
+
+/* Barretta colorata che distingue allenamento da pasto a colpo d'occhio */
+.barra-tipo {
+  flex: 0 0 auto;
+  width: 3px;
+  align-self: stretch;
+  min-height: 30px;
+  border-radius: 2px;
+}
+
+.testo-evento { flex: 1 1 auto; min-width: 0; }
+.testo-evento strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  /* Se il titolo e' lungo viene troncato con i puntini */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.testo-evento .nota { font-size: 12px; }
+
+.freccia { flex: 0 0 auto; color: var(--testo-tenue); font-size: 20px; }
+
+/* ==================================================================
+   Pannello di modifica che scorre dal basso
+   ================================================================== */
+
+.velo {
+  position: fixed;
+  inset: 0; /* copre tutto lo schermo */
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+
+.pannello {
+  width: 100%;
+  max-width: 560px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--scheda);
+  border: 1px solid var(--bordo);
+  border-radius: 18px 18px 0 0;
+  padding: 10px 18px calc(20px + env(safe-area-inset-bottom));
+  animation: sali 0.18s ease-out;
+}
+
+/* Piccola barretta grigia in cima al pannello, come nelle app Android */
+.maniglia {
+  width: 38px;
+  height: 4px;
+  margin: 2px auto 14px;
+  border-radius: 2px;
+  background: var(--bordo);
+}
+
+@keyframes sali {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* --- Campi del modulo ------------------------------------------- */
+.etichetta {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--testo-tenue);
+}
+
+.campo {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 11px;
+  border: 1px solid var(--bordo);
+  background: #101a24;
+  color: var(--testo);
+  font-size: 16px; /* 16px evita che Android ingrandisca la pagina da solo */
+  font-family: inherit;
+}
+.campo:focus { outline: 2px solid var(--accento); outline-offset: 1px; }
+
+.riga-campi {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* --- Scelta del tipo (allenamento / pasto) ---------------------- */
+.gruppo-scelte { display: flex; gap: 10px; }
+
+.scelta {
+  flex: 1 1 0;
+  min-height: 46px;
+  border-radius: 11px;
+  border: 1px solid var(--bordo);
+  background: #101a24;
+  color: var(--testo-tenue);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.scelta.attiva {
+  border-color: var(--accento);
+  background: rgba(78, 163, 255, 0.14);
+  color: var(--testo);
+}
+
+/* --- Eliminazione ------------------------------------------------ */
+.zona-eliminazione {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bordo);
+  text-align: center;
+}
+
+.pulsante.pericolo {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.45);
+  color: #ffc9c9;
+}
+
+.pulsante-testo {
+  border: none;
+  background: none;
+  padding: 6px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accento);
+  cursor: pointer;
+}
+.pulsante-testo.pericolo { color: var(--rosso); }
+
+/* ==================================================================
+   Barra di navigazione in basso
+   ================================================================== */
+
+.barra-navigazione {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  background: rgba(15, 23, 32, 0.96);
+  border-top: 1px solid var(--bordo);
+  padding-bottom: env(safe-area-inset-bottom);
+  /* Sfoca leggermente il contenuto che ci scorre sotto */
+  backdrop-filter: blur(8px);
+}
+
+.voce-nav {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 0 10px;
+  border: none;
+  background: none;
+  color: var(--testo-tenue);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.voce-nav span { font-size: 19px; line-height: 1.1; }
+.voce-nav.attiva { color: var(--accento); }

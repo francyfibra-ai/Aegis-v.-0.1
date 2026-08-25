@@ -38,7 +38,14 @@ Aegis/
 │   ├── main.jsx                Punto di partenza dell'app
 │   ├── App.jsx                 Schermata principale
 │   ├── styles.css              Aspetto grafico
+│   ├── components/
+│   │   ├── PaginaPiano.jsx     Schermata del piano settimanale
+│   │   ├── PaginaSetup.jsx     Diagnostica e copie di sicurezza
+│   │   └── EditorEvento.jsx    Pannello per aggiungere/modificare un evento
 │   └── lib/
+│       ├── modello.js          FORMA DEI DATI: com'è fatto un evento
+│       ├── archivio.js         UNICO FILE CHE SALVA I DATI (vedi sotto)
+│       ├── usaEventi.js        Tiene le schermate aggiornate
 │       ├── notifiche.js        Tutto ciò che riguarda le notifiche
 │       └── fasi.js             Elenco delle fasi di sviluppo
 │
@@ -78,10 +85,26 @@ bisogna pubblicare l'app online — è quello che facciamo nella Fase 1.
 
 | # | Fase                          | Stato     |
 |---|-------------------------------|-----------|
-| 1 | Setup del progetto            | in corso  |
-| 2 | Schermata piano settimanale   | da fare   |
+| 1 | Setup del progetto            | fatta     |
+| 2 | Schermata piano settimanale   | in corso  |
 | 3 | Salvataggio dati (database)   | da fare   |
 | 4 | Notifiche push                | da fare   |
 | 5 | Conferma Fatto / Saltato      | da fare   |
 
 L'elenco è anche dentro l'app: `src/lib/fasi.js`.
+
+---
+
+## Il file più importante: `src/lib/archivio.js`
+
+È **l'unico punto del progetto che tocca i dati salvati**. Tutto il resto
+dell'app chiede "dammi gli eventi" / "salva questo evento" e non sa dove
+finiscano davvero.
+
+Oggi salva nella memoria del telefono. In **Fase 3** riscriveremo solo quel
+file per farlo parlare col database online: le schermate non andranno toccate.
+
+> ⚠️ **Fino alla Fase 3 i dati vivono solo sul dispositivo che stai usando.**
+> Se cambi telefono o cancelli i dati del browser, spariscono. Nella schermata
+> *Setup* c'è **Salva una copia** per scaricare un file di riserva, e
+> **Ripristina da copia** per rileggerlo.
