@@ -106,7 +106,7 @@ bisogna pubblicare l'app online — è quello che facciamo nella Fase 1.
 | 1 | Setup del progetto            | fatta     |
 | 2 | Schermata piano settimanale   | fatta     |
 |   | └ controllo peso + grafico    | fatta     |
-| 3 | Salvataggio dati (database)   | da fare   |
+| 3 | Salvataggio dati (database)   | fatta     |
 | 4 | Notifiche push                | da fare   |
 | 5 | Conferma Fatto / Saltato      | da fare   |
 
@@ -146,7 +146,15 @@ file per farlo parlare col database online: le schermate non andranno toccate.
 Dentro tiene tre archivi separati: gli **eventi** del piano, le **misurazioni**
 di peso e le **preferenze**.
 
-> ⚠️ **Fino alla Fase 3 i dati vivono solo sul dispositivo che stai usando.**
-> Se cambi telefono o cancelli i dati del browser, spariscono. Nella schermata
-> *Setup* c'è **Salva una copia** per scaricare un file di riserva, e
-> **Ripristina da copia** per rileggerlo.
+Oggi `archivio.js` sceglie da solo tra due modi di salvare:
+
+| Situazione | Dove finiscono i dati |
+|---|---|
+| Hai fatto l'accesso | **Archivio online** (Supabase), protetto dal tuo accesso |
+| Non hai fatto l'accesso | Memoria del telefono, come prima |
+
+Al primo accesso l'app propone di portare online quello che avevi già inserito.
+
+> ⚠️ **In modalità online serve la connessione.** Senza rete l'app non riesce a
+> leggere il piano e lo dice apertamente. Una copia locale di riserva per l'uso
+> offline è un miglioramento possibile, non ancora fatto.

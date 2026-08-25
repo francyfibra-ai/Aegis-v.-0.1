@@ -21,8 +21,8 @@ export const FASI = [
   {
     numero: 3,
     titolo: 'Salvataggio dati',
-    stato: 'da-fare',
-    descrizione: 'Il piano viene salvato nel database e ritrovato su ogni dispositivo.',
+    stato: 'fatto',
+    descrizione: 'Il piano è nel database online, protetto dal tuo accesso, e ti segue su ogni dispositivo.',
   },
   {
     numero: 4,
