@@ -26,7 +26,7 @@
 */
 
 // Indirizzo del progetto, tipo 'https://abcdefgh.supabase.co'
-export const SUPABASE_URL = ''
+export const SUPABASE_URL = 'https://zikfldmqdsacywvxiuab.supabase.co'
 
 // Chiave pubblica, indicata come "anon public" oppure "publishable"
 export const SUPABASE_CHIAVE_PUBBLICA = ''
