@@ -58,8 +58,15 @@ Pannello Supabase → **Edge Functions** → **Deploy a new function** →
   non coincidono si ottiene `404` a ogni giro.
   *(In questo progetto la funzione si chiama `nome-promemoria`, e `cron.sql`
   punta lì.)*
-- Cancella il codice di esempio e incolla tutto il contenuto di
-  **`supabase/functions/promemoria/completo.ts`**
+- ⚠️ **Il file nell'editor deve chiamarsi `index.ts`.** È il nome che Supabase
+  cerca come punto di partenza: rinominarlo (per esempio in `completo.ts`) fa
+  fallire la pubblicazione con
+  *«Entrypoint path does not exist … /source/index.ts»*
+- **Cancella tutto** il codice di esempio — se ne resta anche solo una riga, la
+  funzione risponde `{"message":"Hello undefined!"}` e sembra funzionare pur
+  non facendo nulla
+- Incolla il contenuto di **`supabase/functions/promemoria/completo.ts`**
+  dentro `index.ts`
 - Se compare l'opzione **Verify JWT** (o "Enforce JWT verification"),
   **disattivala**: la funzione si protegge da sola con un segreto, e con la
   verifica attiva la sveglia non riuscirebbe a chiamarla
@@ -175,6 +182,8 @@ Se la notifica arriva con i pulsanti *Fatto* e *Saltato*, la Fase 4 è finita.
 |---|---|
 | La prova dice `personeConsiderate: 0` | Il telefono non è registrato: rifai il Passo 6 |
 | La prova dice `notificheDovute: 0` sempre | Controlla di avere un evento nell'orario giusto, e il fuso orario nel profilo |
+| Risposta `{"message":"Hello undefined!"}` | Nella funzione c'è ancora il codice di esempio di Supabase: non è mai stato sostituito |
+| *«Entrypoint path does not exist»* | Il file nell'editor non si chiama `index.ts` |
 | `401` con `{"errore":"Non autorizzato"}` | È la funzione: il segreto non coincide tra Passo 3 e Passo 5 |
 | `401` con `INVALID_CREDENTIALS` | È il portone di Supabase, non la funzione. Serve l'intestazione **`apikey`** con la chiave pubblica. Non basta metterla in `Authorization`, e non basta disattivare *Verify JWT*: il portone chiede le credenziali comunque |
 | La funzione risponde `404` | Il nome nel `cron.sql` non coincide con quello reale della funzione |

@@ -36,20 +36,26 @@
 */
 
 /*
-  Una sequenza di byte "vera", cioe' appoggiata a una memoria normale.
-  L'annotazione esplicita serve perche' le funzioni crittografiche
-  rifiutano le sequenze appoggiate a memoria condivisa tra processi,
-  che noi non usiamo mai ma che il compilatore non puo' escludere da
-  solo. Senza questa riga, Deno rifiuterebbe di pubblicare la funzione.
+  Le funzioni crittografiche standard vogliono un tipo ("BufferSource")
+  che il compilatore non riconosce automaticamente in una normale
+  sequenza di byte, perche' non puo' escludere che sia appoggiata a
+  memoria condivisa tra processi - cosa che qui non succede mai.
+
+  Questo aiutante glielo dice esplicitamente. E' scritto in una forma
+  che funziona con qualunque versione del compilatore: la notazione
+  piu' moderna avrebbe fatto rifiutare la pubblicazione dove Deno ne
+  monta una piu' vecchia.
 */
-type Byte = Uint8Array<ArrayBuffer>
+function comeBuffer(byte: Uint8Array): BufferSource {
+  return byte as unknown as BufferSource
+}
 
 /* ------------------------------------------------------------------
    Conversioni tra testo e byte
    ------------------------------------------------------------------ */
 
 /** base64url -> byte. E' il base64 senza i caratteri scomodi negli indirizzi. */
-function daBase64Url(testo: string): Byte {
+function daBase64Url(testo: string): Uint8Array {
   const base64 = testo.replace(/-/g, '+').replace(/_/g, '/')
   // Reintegra il riempimento finale che il base64url omette
   const conRiempimento = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
@@ -60,14 +66,14 @@ function daBase64Url(testo: string): Byte {
 }
 
 /** byte -> base64url */
-function aBase64Url(byte: Byte): string {
+function aBase64Url(byte: Uint8Array): string {
   let binario = ''
   for (const b of byte) binario += String.fromCharCode(b)
   return btoa(binario).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 /** Attacca piu' sequenze di byte una dopo l'altra. */
-function unisci(...pezzi: Byte[]): Byte {
+function unisci(...pezzi: Uint8Array[]): Uint8Array {
   const totale = pezzi.reduce((s, p) => s + p.length, 0)
   const risultato = new Uint8Array(totale)
   let posizione = 0
@@ -78,16 +84,16 @@ function unisci(...pezzi: Byte[]): Byte {
   return risultato
 }
 
-const testoInByte = (s: string): Byte => new TextEncoder().encode(s) as Byte
+const testoInByte = (s: string): Uint8Array => new TextEncoder().encode(s)
 
 /* ------------------------------------------------------------------
    HKDF: da un segreto grezzo si ricavano chiavi utilizzabili
    ------------------------------------------------------------------ */
 
 /** Primo passo: "concentra" il materiale grezzo in una chiave intermedia. */
-async function hkdfEstrai(sale: Byte, materiale: Byte): Promise<Byte> {
-  const chiave = await crypto.subtle.importKey('raw', sale, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  return new Uint8Array(await crypto.subtle.sign('HMAC', chiave, materiale))
+async function hkdfEstrai(sale: Uint8Array, materiale: Uint8Array): Promise<Uint8Array> {
+  const chiave = await crypto.subtle.importKey('raw', comeBuffer(sale), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  return new Uint8Array(await crypto.subtle.sign('HMAC', chiave, comeBuffer(materiale)))
 }
 
 /**
@@ -95,9 +101,9 @@ async function hkdfEstrai(sale: Byte, materiale: Byte): Promise<Byte> {
  * di lunghezza voluta e legata a uno scopo preciso ("info").
  * Ci servono sempre meno di 32 byte, quindi basta un solo giro.
  */
-async function hkdfEspandi(prk: Byte, info: Byte, lunghezza: number): Promise<Byte> {
-  const chiave = await crypto.subtle.importKey('raw', prk, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  const blocco = new Uint8Array(await crypto.subtle.sign('HMAC', chiave, unisci(info, new Uint8Array([1]))))
+async function hkdfEspandi(prk: Uint8Array, info: Uint8Array, lunghezza: number): Promise<Uint8Array> {
+  const chiave = await crypto.subtle.importKey('raw', comeBuffer(prk), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const blocco = new Uint8Array(await crypto.subtle.sign('HMAC', chiave, comeBuffer(unisci(info, new Uint8Array([1])))))
   return blocco.subarray(0, lunghezza)
 }
 
@@ -121,9 +127,9 @@ interface Iscrizione {
 async function cifra(
   testo: string,
   iscrizione: Iscrizione,
-  saleFisso?: Byte,
+  saleFisso?: Uint8Array,
   coppiaFissa?: CryptoKeyPair
-): Promise<Byte> {
+): Promise<Uint8Array> {
   const chiavePubblicaTelefono = daBase64Url(iscrizione.chiavi.p256dh) // 65 byte
   const segretoTelefono = daBase64Url(iscrizione.chiavi.auth) // 16 byte
 
@@ -141,7 +147,7 @@ async function cifra(
   //    ricavare dalla propria chiave privata, senza che nessuno lo trasmetta.
   const loroPubblica = await crypto.subtle.importKey(
     'raw',
-    chiavePubblicaTelefono,
+    comeBuffer(chiavePubblicaTelefono),
     { name: 'ECDH', namedCurve: 'P-256' },
     false,
     []
@@ -180,11 +186,11 @@ async function cifra(
   // 5. Il messaggio termina con 0x02: segnala "questo e' l'ultimo pezzo".
   const daCifrare = unisci(testoInByte(testo), new Uint8Array([2]))
 
-  const chiaveAes = await crypto.subtle.importKey('raw', chiaveCifratura, { name: 'AES-GCM' }, false, [
+  const chiaveAes = await crypto.subtle.importKey('raw', comeBuffer(chiaveCifratura), { name: 'AES-GCM' }, false, [
     'encrypt',
   ])
   const cifrato = new Uint8Array(
-    await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce, tagLength: 128 }, chiaveAes, daCifrare)
+    await crypto.subtle.encrypt({ name: 'AES-GCM', iv: comeBuffer(nonce), tagLength: 128 }, chiaveAes, comeBuffer(daCifrare))
   )
 
   // 6. Il corpo da spedire: intestazione + contenuto cifrato.
@@ -232,7 +238,7 @@ async function intestazioneVapid(
 
   const chiave = await importaChiaveFirma(chiavePubblica, chiavePrivata)
   const firma = new Uint8Array(
-    await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, chiave, testoInByte(parteFissa))
+    await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, chiave, comeBuffer(testoInByte(parteFissa)))
   )
 
   return `vapid t=${parteFissa}.${aBase64Url(firma)}, k=${chiavePubblica}`
@@ -305,7 +311,7 @@ async function invia(
       'Content-Type': 'application/octet-stream',
       TTL: String(durataSecondi),
     },
-    body: corpo,
+    body: comeBuffer(corpo),
   })
 
   // 404 e 410 significano che quel telefono non esiste piu' per il
