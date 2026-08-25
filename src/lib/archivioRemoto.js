@@ -52,10 +52,34 @@ function segnala(errore, cosa) {
   if (!errore) return
   console.error(`[archivio remoto] ${cosa}:`, errore)
 
-  if (errore.message?.includes('Failed to fetch') || errore.message?.includes('NetworkError')) {
+  const messaggio = errore.message || ''
+
+  // Il telefono e' offline, oppure Supabase non risponde
+  if (messaggio.includes('Failed to fetch') || messaggio.includes('NetworkError')) {
     throw new Error('Nessuna connessione. Riprova quando torni online.')
   }
-  throw new Error(`Non sono riuscito a ${cosa}. (${errore.message})`)
+
+  // Le tabelle non esistono ancora: capita finche' lo schema non e' stato
+  // incollato nel pannello di Supabase. Senza questa traduzione l'utente
+  // leggerebbe "Could not find the table in the schema cache", che non
+  // suggerisce in alcun modo cosa fare.
+  if (
+    errore.code === 'PGRST205' ||
+    messaggio.includes('schema cache') ||
+    messaggio.includes('does not exist')
+  ) {
+    throw new Error(
+      "Il database non ha ancora le tabelle. Va incollato una volta sola il contenuto di supabase/schema.sql nel pannello Supabase, sezione SQL Editor."
+    )
+  }
+
+  // Le regole di protezione hanno respinto l'operazione. In pratica
+  // significa quasi sempre che l'accesso e' scaduto.
+  if (errore.code === '42501' || messaggio.includes('row-level security')) {
+    throw new Error("Il tuo accesso non risulta più valido. Esci e rientra.")
+  }
+
+  throw new Error(`Non sono riuscito a ${cosa}. (${messaggio})`)
 }
 
 /* ------------------------------------------------------------------
