@@ -10,6 +10,9 @@ import { useEffect, useState } from 'react'
 import PaginaPiano from './components/PaginaPiano.jsx'
 import PaginaPeso from './components/PaginaPeso.jsx'
 import PaginaSetup from './components/PaginaSetup.jsx'
+import { ascoltaAccesso, utenteAttuale } from './lib/supabase.js'
+import { impostaUtente, inLinea } from './lib/archivio.js'
+import { supabaseConfigurato } from './lib/configurazione.js'
 
 // Le voci della barra in fondo allo schermo.
 const VISTE = [
@@ -26,9 +29,45 @@ export default function App() {
   // Succede quando arrivi qui toccando la notifica del controllo peso.
   const [apriEditorPeso, setApriEditorPeso] = useState(false)
 
+  // Chi e' collegato, oppure null. Da qui dipende se i dati vanno
+  // online o restano sul telefono.
+  const [utente, setUtente] = useState(null)
+
+  // Finche' non sappiamo se c'e' un accesso valido, evitiamo di mostrare
+  // "i dati sono solo sul telefono" a chi in realta' e' collegato.
+  const [accessoVerificato, setAccessoVerificato] = useState(!supabaseConfigurato())
+
   // Messaggio mostrato quando si risponde a una notifica.
   // Dalla Fase 5 la risposta verra' salvata davvero nello storico.
   const [rispostaNotifica, setRispostaNotifica] = useState('')
+
+  // --- Accesso: leggiamo la situazione all'avvio e restiamo in ascolto ---
+  useEffect(() => {
+    if (!supabaseConfigurato()) return
+
+    let annullato = false
+
+    utenteAttuale().then((chi) => {
+      if (annullato) return
+      setUtente(chi)
+      impostaUtente(chi) // dice all'archivio quale modalita' usare
+      setAccessoVerificato(true)
+    })
+
+    // Scatta quando entri, quando esci, e anche quando l'accesso
+    // viene rinnovato o scade da solo dopo molto tempo.
+    const smetti = ascoltaAccesso((chi) => {
+      if (annullato) return
+      setUtente(chi)
+      impostaUtente(chi)
+      setAccessoVerificato(true)
+    })
+
+    return () => {
+      annullato = true
+      smetti()
+    }
+  }, [])
 
   useEffect(() => {
     // Caso 1: l'app era gia' aperta e il service worker ci avvisa
@@ -87,10 +126,22 @@ export default function App() {
         </p>
       )}
 
+      {/* Invito ad accedere: solo quando l'archivio online esiste,
+          sappiamo con certezza che non sei collegato, e non sei gia'
+          nella schermata dove si entra. */}
+      {supabaseConfigurato() && accessoVerificato && !utente && schermata !== 'setup' && (
+        <p className="messaggio tenue">
+          💾 I dati sono solo su questo telefono.{' '}
+          <button className="pulsante-testo" onClick={() => setSchermata('setup')}>
+            Accedi per conservarli online
+          </button>
+        </p>
+      )}
+
       <main>
         {schermata === 'piano' && <PaginaPiano />}
         {schermata === 'peso' && <PaginaPeso apriSubitoEditor={apriEditorPeso} />}
-        {schermata === 'setup' && <PaginaSetup />}
+        {schermata === 'setup' && <PaginaSetup utente={utente} />}
       </main>
 
       {/* --- Barra di navigazione in basso, comoda col pollice --- */}

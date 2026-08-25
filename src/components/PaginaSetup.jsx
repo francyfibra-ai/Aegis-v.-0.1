@@ -24,11 +24,13 @@ import {
   sostituisciMisurazioni,
   leggiPreferenze,
   salvaPreferenza,
-  INFO_ARCHIVIO,
+  infoArchivio,
 } from '../lib/archivio.js'
 import { FASI } from '../lib/fasi.js'
+import SchedaAccount from './SchedaAccount.jsx'
+import TrasferimentoDati from './TrasferimentoDati.jsx'
 
-export default function PaginaSetup() {
+export default function PaginaSetup({ utente }) {
   const [permesso, setPermesso] = useState(statoPermessoNotifiche())
   const [swPronto, setSwPronto] = useState(false)
   const [messaggio, setMessaggio] = useState('')
@@ -131,6 +133,10 @@ export default function PaginaSetup() {
         </div>
       </div>
 
+      {/* --- Accesso e archivio online --- */}
+      <TrasferimentoDati utente={utente} />
+      <SchedaAccount utente={utente} />
+
       {/* --- Controlli tecnici --- */}
       <section className="scheda">
         <h3>Controllo tecnico</h3>
@@ -205,7 +211,7 @@ export default function PaginaSetup() {
       {/* --- Dati e copia di sicurezza --- */}
       <section className="scheda">
         <h3>I tuoi dati</h3>
-        <p className="nota">{INFO_ARCHIVIO.spiegazione}</p>
+        <p className="nota">{infoArchivio().spiegazione}</p>
 
         <div className="pulsantiera">
           <button className="pulsante" onClick={esportaTutto}>

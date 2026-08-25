@@ -18,7 +18,7 @@ import {
   aggiornaEvento,
   eliminaEvento,
   sostituisciTutto,
-  INFO_ARCHIVIO,
+  infoArchivio,
 } from '../lib/archivio.js'
 import { usaEventi } from '../lib/hooks.js'
 import EditorEvento from './EditorEvento.jsx'
@@ -77,7 +77,7 @@ export default function PaginaPiano() {
           <p className="nota">
             {eventi.length === 0
               ? 'Nessun evento ancora.'
-              : `${eventi.length} eventi a settimana · ${INFO_ARCHIVIO.etichetta}`}
+              : `${eventi.length} eventi a settimana · ${infoArchivio().etichetta}`}
           </p>
         </div>
       </div>

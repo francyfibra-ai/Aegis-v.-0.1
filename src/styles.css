@@ -647,3 +647,27 @@ h3 { font-size: 15px; margin: 0; }
   border-color: rgba(143, 163, 181, 0.25);
   font-size: 13px;
 }
+
+/* Collegamenti sotto al modulo di accesso (crea accesso, password dimenticata) */
+.scelte-accesso {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--bordo);
+}
+
+/* Il nome di un file citato nel testo */
+code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: #101a24;
+  border: 1px solid var(--bordo);
+  font-size: 0.9em;
+}
+
+/* I campi del modulo, quando stanno dentro una scheda e non nel
+   pannello che scorre dal basso, hanno bisogno di respirare meno */
+.scheda form .etichetta:first-child { margin-top: 4px; }
