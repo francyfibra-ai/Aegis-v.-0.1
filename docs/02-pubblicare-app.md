@@ -128,8 +128,16 @@ promemoria veri, agli orari del tuo piano.
 
 Nella repository c'è un ramo chiamato `gh-pages`, rimasto da un tentativo
 precedente fatto quando Pages non era ancora attivo. **Non viene più usato**:
-con Source su "GitHub Actions" nessuno lo legge. È innocuo e si può cancellare
-in qualsiasi momento.
+con Source su "GitHub Actions" nessuno lo legge, e contiene solo l'app
+compilata (nessun codice sorgente).
+
+Per cancellarlo: <https://github.com/francyfibra-ai/Aegis-v.-0.1/branches> →
+riga **gh-pages** → icona del **cestino 🗑**.
+
+> 📱 Da telefono serve la **"Sito desktop"** attiva in Chrome, altrimenti
+> l'icona del cestino non compare.
+
+Lasciarlo lì non causa alcun problema.
 
 ---
 
