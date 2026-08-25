@@ -20,7 +20,7 @@ import {
   sostituisciTutto,
   INFO_ARCHIVIO,
 } from '../lib/archivio.js'
-import { usaEventi } from '../lib/usaEventi.js'
+import { usaEventi } from '../lib/hooks.js'
 import EditorEvento from './EditorEvento.jsx'
 
 export default function PaginaPiano() {

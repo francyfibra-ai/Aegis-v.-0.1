@@ -27,10 +27,27 @@ export const GIORNI = [
 // --- I tipi di evento --------------------------------------------------
 // Per aggiungere un tipo in futuro (es. "integratore", "sonno")
 // basta aggiungere una riga qui: l'interfaccia si adegua da sola.
+// Il campo "richiedeMisura" distingue i due comportamenti:
+//  - false -> alla notifica si risponde "Fatto" o "Saltato"
+//  - true  -> alla notifica si risponde inserendo un NUMERO (i chili)
+//
+// I colori non sono scelti a occhio: sono i primi tre di una palette
+// verificata, gli unici che restano distinguibili anche per chi ha
+// difficolta' a percepire i colori. Non cambiarli a caso.
 export const TIPI_EVENTO = [
-  { id: 'allenamento', nome: 'Allenamento', emoji: '🏋️', colore: '#4ea3ff' },
-  { id: 'pasto', nome: 'Pasto', emoji: '🍽️', colore: '#3ecf8e' },
+  { id: 'allenamento', nome: 'Allenamento', emoji: '🏋️', colore: '#3987e5', richiedeMisura: false },
+  { id: 'pasto', nome: 'Pasto', emoji: '🍽️', colore: '#199e70', richiedeMisura: false },
+  { id: 'peso', nome: 'Peso', emoji: '⚖️', colore: '#d95926', richiedeMisura: true },
 ]
+
+// Colori di stato, usati per dire "stai andando nella direzione giusta".
+// Non vengono MAI usati da soli: accanto c'e' sempre una freccia e una scritta,
+// altrimenti chi non distingue i colori non capirebbe.
+export const COLORI_STATO = {
+  bene: '#0ca30c',
+  male: '#d03b3b',
+  neutro: '#8fa3b5',
+}
 
 /**
  * Restituisce le informazioni di un tipo di evento a partire dal suo id.
@@ -124,6 +141,112 @@ export function ordinaPerOrario(eventi) {
 }
 
 /**
+ * LA FORMA DI UNA MISURAZIONE DI PESO
+ * -----------------------------------
+ * {
+ *   id:    'msr_abc123'
+ *   data:  '2026-08-23'    giorno della pesata, in formato anno-mese-giorno
+ *   peso:  78.4            in chilogrammi, con al massimo un decimale
+ * }
+ *
+ * Sta in un elenco separato dagli eventi del piano: il piano dice QUANDO
+ * pesarsi, le misurazioni dicono QUANTO pesavi.
+ */
+
+/** Genera un identificativo unico per una misurazione. */
+export function nuovoIdMisurazione() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return 'msr_' + crypto.randomUUID()
+  }
+  return 'msr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+}
+
+/**
+ * Trasforma una data in testo nel formato che usiamo per salvarla.
+ * Lo facciamo a mano invece di usare toISOString() perche' quello
+ * converte in orario di Greenwich e in Italia puo' far slittare
+ * la data al giorno prima.
+ */
+export function dataInTesto(data = new Date()) {
+  const anno = data.getFullYear()
+  const mese = String(data.getMonth() + 1).padStart(2, '0')
+  const giorno = String(data.getDate()).padStart(2, '0')
+  return `${anno}-${mese}-${giorno}`
+}
+
+/**
+ * Il contrario: da '2026-08-23' a una data vera.
+ * La "T00:00:00" serve a farla interpretare come mezzanotte LOCALE
+ * e non come orario di Greenwich (stesso problema di prima).
+ */
+export function testoInData(testo) {
+  return new Date(testo + 'T00:00:00')
+}
+
+/** Scrive un peso in modo leggibile: 78.4 -> "78,4 kg" */
+export function formattaPeso(kg, conUnita = true) {
+  if (kg === null || kg === undefined || Number.isNaN(kg)) return '—'
+  const numero = Number(kg).toLocaleString('it-IT', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  })
+  return conUnita ? numero + ' kg' : numero
+}
+
+/** Scrive una differenza col segno: -0.6 -> "−0,6 kg", 0 -> "invariato" */
+export function formattaVariazione(kg) {
+  if (kg === null || kg === undefined || Number.isNaN(kg)) return '—'
+  const arrotondato = Math.round(kg * 10) / 10
+  if (arrotondato === 0) return 'invariato'
+  const segno = arrotondato > 0 ? '+' : '−' // "−" e' il vero segno meno, piu' leggibile del trattino
+  return segno + formattaPeso(Math.abs(arrotondato))
+}
+
+/**
+ * Controlla che una misurazione sia sensata.
+ * @returns {string|null} messaggio d'errore, oppure null se va bene
+ */
+export function validaMisurazione({ data, peso }) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data || '')) return 'Scegli una data.'
+  const numero = Number(peso)
+  if (!Number.isFinite(numero)) return 'Scrivi il peso in chili (es. 78,4).'
+  // Limiti larghi: servono solo a intercettare un errore di battitura
+  // (una virgola nel posto sbagliato), non a giudicare nessuno.
+  if (numero < 20 || numero > 400) return 'Il peso deve essere tra 20 e 400 kg.'
+  if (testoInData(data) > new Date()) return 'Non puoi registrare una pesata futura.'
+  return null
+}
+
+/**
+ * L'obiettivo dichiarato dall'utente. Serve SOLO a decidere se colorare
+ * di verde o di rosso una variazione: senza obiettivo l'app non da'
+ * giudizi, mostra il numero e basta.
+ */
+export const OBIETTIVI = [
+  { id: 'nessuno', nome: 'Nessuno', descrizione: "Mostra i numeri senza giudicarli" },
+  { id: 'perdere', nome: 'Perdere', descrizione: 'Scendere è positivo' },
+  { id: 'mantenere', nome: 'Mantenere', descrizione: 'Restare stabile è positivo' },
+  { id: 'aumentare', nome: 'Aumentare', descrizione: 'Salire è positivo' },
+]
+
+/**
+ * Dato un obiettivo e una variazione, dice se e' un progresso.
+ * @returns {'bene'|'male'|'neutro'}
+ */
+export function giudicaVariazione(variazione, obiettivo) {
+  if (obiettivo === 'nessuno' || variazione === null || variazione === undefined) return 'neutro'
+
+  const v = Math.round(variazione * 10) / 10
+  if (v === 0) return obiettivo === 'mantenere' ? 'bene' : 'neutro'
+
+  if (obiettivo === 'perdere') return v < 0 ? 'bene' : 'male'
+  if (obiettivo === 'aumentare') return v > 0 ? 'bene' : 'male'
+  // "mantenere": va bene finche' lo scostamento resta sotto il mezzo chilo
+  if (obiettivo === 'mantenere') return Math.abs(v) <= 0.5 ? 'bene' : 'male'
+  return 'neutro'
+}
+
+/**
  * Un piano settimanale di esempio, da caricare al primo avvio
  * per capire subito come funziona. E' pensato per essere modificato.
  */
@@ -155,6 +278,11 @@ export function pianoDiEsempio() {
     [5, 'pasto', 'Pranzo libero', '13:30'],
 
     [6, 'pasto', 'Pranzo in famiglia', '13:00'],
+    // Il controllo del peso: una volta a settimana, la domenica mattina.
+    // La domenica perche' sei a casa senza fretta, e per un grafico leggibile
+    // conta piu' la costanza delle condizioni che il giorno scelto.
+    // Se preferisci il lunedi', basta toccare l'evento e cambiare giorno.
+    [6, 'peso', 'Controllo peso', '08:00'],
   ]
 
   return bozza.map(([giorno, tipo, titolo, orario]) => ({

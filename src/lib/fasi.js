@@ -15,7 +15,8 @@ export const FASI = [
     numero: 2,
     titolo: 'Schermata piano settimanale',
     stato: 'in-corso',
-    descrizione: 'Inserire e modificare allenamenti e pasti, giorno per giorno.',
+    descrizione:
+      'Inserire e modificare allenamenti, pasti e controllo peso, giorno per giorno, con il grafico dell\'andamento.',
   },
   {
     numero: 3,
@@ -33,6 +34,7 @@ export const FASI = [
     numero: 5,
     titolo: 'Conferma Fatto / Saltato',
     stato: 'da-fare',
-    descrizione: 'Rispondere dalla notifica e costruire lo storico nel tempo.',
+    descrizione:
+      'Rispondere dalla notifica e costruire lo storico nel tempo. Per il peso, inserire i chili.',
   },
 ]

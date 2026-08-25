@@ -3,8 +3,8 @@
   ---------------------------------------------------------------
   QUESTO E' L'UNICO FILE CHE PARLA CON LA MEMORIA DEI DATI.
 
-  Il resto dell'app chiede "dammi gli eventi" / "salva questo evento"
-  e non sa - ne' deve sapere - dove finiscono davvero.
+  Il resto dell'app chiede "dammi gli eventi" / "salva questa pesata"
+  e non sa - ne' deve sapere - dove finiscano davvero.
 
   Oggi (FASE 2) i dati stanno nella memoria del telefono
   ("localStorage": uno spazio che il browser riserva a ogni sito).
@@ -15,14 +15,14 @@
   anche se ora sarebbero istantanee: e' fatto apposta, perche' quando
   ci sara' il database di mezzo servira' aspettare la rete, e cosi'
   non dovremo cambiare il codice delle schermate.
+
+  Dentro ci sono TRE archivi separati:
+    1. eventi        - il piano settimanale (cosa fare e quando)
+    2. misurazioni   - le pesate registrate (quanto pesavi e quando)
+    3. preferenze    - le impostazioni (per ora solo l'obiettivo di peso)
 */
 
-import { nuovoId, ordinaPerOrario } from './modello.js'
-
-// Nome della "cassetta" dove il browser tiene i nostri dati.
-// Il ".v1" serve se un domani cambiamo la forma dei dati: potremo
-// passare a ".v2" senza far confusione con i dati vecchi.
-const CHIAVE_MEMORIA = 'aegis.eventi.v1'
+import { nuovoId, nuovoIdMisurazione, ordinaPerOrario } from './modello.js'
 
 // Descrizione di dove stanno i dati adesso: la mostriamo nell'app
 // cosi' e' sempre chiaro se siamo in locale o collegati al database.
@@ -33,84 +33,108 @@ export const INFO_ARCHIVIO = {
     'I dati sono salvati nella memoria di questo telefono. Diventeranno permanenti e sincronizzati nella Fase 3.',
 }
 
-// Copia degli eventi tenuta in memoria mentre l'app e' aperta,
-// per non rileggere il disco a ogni schermata.
-let cache = null
+/* ==================================================================
+   Il meccanismo comune a tutti gli archivi
+   ------------------------------------------------------------------
+   I tre archivi funzionano allo stesso identico modo: leggere, scrivere,
+   avvisare le schermate. Invece di scrivere tre volte lo stesso codice,
+   lo scriviamo una volta sola qui dentro.
+   ================================================================== */
 
-// Elenco delle funzioni da richiamare quando i dati cambiano,
-// cosi' le schermate aperte si aggiornano da sole.
-const ascoltatori = new Set()
+function creaArchivio(chiaveMemoria, valoreIniziale) {
+  // Copia tenuta in memoria mentre l'app e' aperta, per non rileggere
+  // il disco a ogni schermata. "null" significa "non ancora letto".
+  let cache = null
 
-/* ------------------------------------------------------------------ */
-/*  Lettura e scrittura grezza sulla memoria del browser              */
-/* ------------------------------------------------------------------ */
+  // Le funzioni da richiamare quando i dati cambiano, cosi' le schermate
+  // aperte si aggiornano da sole.
+  const ascoltatori = new Set()
 
-function leggiDallaMemoria() {
-  try {
-    const testo = localStorage.getItem(CHIAVE_MEMORIA)
-    if (!testo) return []
-
-    const dati = JSON.parse(testo)
-    // Controllo di sicurezza: se il contenuto non e' una lista,
-    // lo consideriamo corrotto e ripartiamo da vuoto.
-    return Array.isArray(dati) ? dati : []
-  } catch (errore) {
-    // Puo' succedere in navigazione privata o se i dati sono corrotti.
-    console.warn('[archivio] lettura fallita, riparto da vuoto:', errore)
-    return []
-  }
-}
-
-function scriviNellaMemoria(eventi) {
-  try {
-    localStorage.setItem(CHIAVE_MEMORIA, JSON.stringify(eventi))
-    return true
-  } catch (errore) {
-    console.error('[archivio] salvataggio fallito:', errore)
-    return false
-  }
-}
-
-/** Avvisa tutte le schermate aperte che i dati sono cambiati. */
-function avvisaAscoltatori() {
-  for (const ascoltatore of ascoltatori) {
+  function leggiDalDisco() {
     try {
-      ascoltatore(cache)
+      const testo = localStorage.getItem(chiaveMemoria)
+      if (!testo) return structuredClone(valoreIniziale)
+
+      const dati = JSON.parse(testo)
+      // Controllo di sicurezza: se il contenuto non ha la forma attesa,
+      // lo consideriamo corrotto e ripartiamo dal valore iniziale.
+      const formaAttesa = Array.isArray(valoreIniziale)
+      if (Array.isArray(dati) !== formaAttesa) return structuredClone(valoreIniziale)
+      return dati
     } catch (errore) {
-      console.error('[archivio] un ascoltatore ha dato errore:', errore)
+      // Puo' succedere in navigazione privata o se i dati sono corrotti.
+      console.warn(`[archivio] lettura di ${chiaveMemoria} fallita:`, errore)
+      return structuredClone(valoreIniziale)
     }
   }
-}
 
-/** Salva la cache sul disco e avvisa le schermate. */
-function salvaEAvvisa() {
-  const salvato = scriviNellaMemoria(cache)
-  avvisaAscoltatori()
-  if (!salvato) {
-    throw new Error(
-      'Non sono riuscito a salvare. Se stai usando una finestra in incognito, prova in una normale.'
-    )
+  function avvisaAscoltatori() {
+    for (const ascoltatore of ascoltatori) {
+      try {
+        ascoltatore(cache)
+      } catch (errore) {
+        console.error('[archivio] un ascoltatore ha dato errore:', errore)
+      }
+    }
+  }
+
+  return {
+    /** Restituisce il contenuto dell'archivio, leggendolo la prima volta. */
+    async leggi() {
+      if (cache === null) cache = leggiDalDisco()
+      return cache
+    },
+
+    /** Sostituisce il contenuto, salva su disco e avvisa le schermate. */
+    async scrivi(nuovoContenuto) {
+      cache = nuovoContenuto
+      let salvato = true
+      try {
+        localStorage.setItem(chiaveMemoria, JSON.stringify(cache))
+      } catch (errore) {
+        console.error('[archivio] salvataggio fallito:', errore)
+        salvato = false
+      }
+
+      // Avvisiamo comunque: cosi' la schermata mostra il dato aggiornato
+      // anche se il salvataggio permanente non e' riuscito.
+      avvisaAscoltatori()
+
+      if (!salvato) {
+        throw new Error(
+          'Non sono riuscito a salvare. Se stai usando una finestra in incognito, prova in una normale.'
+        )
+      }
+      return cache
+    },
+
+    /**
+     * Permette a una schermata di essere avvisata quando i dati cambiano.
+     * @returns {() => void} funzione da chiamare per smettere di ascoltare
+     */
+    iscriviti(callback) {
+      ascoltatori.add(callback)
+      return () => ascoltatori.delete(callback)
+    },
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Le funzioni usate dalle schermate                                 */
-/* ------------------------------------------------------------------ */
+// I tre archivi. Il ".v1" nel nome serve se un domani cambiamo la forma
+// dei dati: potremo passare a ".v2" senza fare confusione con i vecchi.
+const archivioEventi = creaArchivio('aegis.eventi.v1', [])
+const archivioMisurazioni = creaArchivio('aegis.misurazioni.v1', [])
+const archivioPreferenze = creaArchivio('aegis.preferenze.v1', {})
 
-/**
- * Restituisce TUTTI gli eventi del piano settimanale, di tutti i giorni.
- * @returns {Promise<Array>}
- */
+/* ==================================================================
+   1. EVENTI - il piano settimanale
+   ================================================================== */
+
+/** Tutti gli eventi del piano, di tutti i giorni. */
 export async function leggiEventi() {
-  if (cache === null) cache = leggiDallaMemoria()
-  return cache
+  return archivioEventi.leggi()
 }
 
-/**
- * Restituisce gli eventi di un singolo giorno, gia' ordinati per orario.
- * @param {number} giorno 0 = lunedi' ... 6 = domenica
- * @returns {Promise<Array>}
- */
+/** Gli eventi di un solo giorno, gia' ordinati per orario. */
 export async function leggiEventiDelGiorno(giorno) {
   const eventi = await leggiEventi()
   return ordinaPerOrario(eventi.filter((e) => e.giorno === giorno))
@@ -122,7 +146,7 @@ export async function leggiEventiDelGiorno(giorno) {
  * @returns {Promise<object>} l'evento creato, con il suo id
  */
 export async function creaEvento(dati) {
-  await leggiEventi() // assicura che la cache sia caricata
+  const eventi = await leggiEventi()
 
   const evento = {
     id: nuovoId(),
@@ -132,22 +156,16 @@ export async function creaEvento(dati) {
     orario: dati.orario,
   }
 
-  cache = [...cache, evento]
-  salvaEAvvisa()
+  await archivioEventi.scrivi([...eventi, evento])
   return evento
 }
 
-/**
- * Modifica un evento esistente.
- * @param {string} id l'identificativo dell'evento
- * @param {object} modifiche solo i campi da cambiare
- * @returns {Promise<object>} l'evento aggiornato
- */
+/** Modifica un evento esistente. */
 export async function aggiornaEvento(id, modifiche) {
-  await leggiEventi()
+  const eventi = await leggiEventi()
 
   let aggiornato = null
-  cache = cache.map((evento) => {
+  const nuoviEventi = eventi.map((evento) => {
     if (evento.id !== id) return evento
     aggiornato = { ...evento, ...modifiche }
     if (typeof aggiornato.titolo === 'string') {
@@ -158,38 +176,100 @@ export async function aggiornaEvento(id, modifiche) {
 
   if (!aggiornato) throw new Error('Evento non trovato: ' + id)
 
-  salvaEAvvisa()
+  await archivioEventi.scrivi(nuoviEventi)
   return aggiornato
 }
 
-/**
- * Elimina un evento dal piano.
- * @param {string} id
- */
+/** Elimina un evento dal piano. */
 export async function eliminaEvento(id) {
-  await leggiEventi()
-  cache = cache.filter((evento) => evento.id !== id)
-  salvaEAvvisa()
+  const eventi = await leggiEventi()
+  await archivioEventi.scrivi(eventi.filter((evento) => evento.id !== id))
 }
 
-/**
- * Sostituisce l'intero piano. Serve per caricare il piano di esempio
- * o per svuotare tutto.
- * @param {Array} eventi
- */
+/** Sostituisce l'intero piano (piano di esempio, ripristino da copia). */
 export async function sostituisciTutto(eventi) {
-  cache = [...eventi]
-  salvaEAvvisa()
-  return cache
+  return archivioEventi.scrivi([...eventi])
+}
+
+export function iscriviti(callback) {
+  return archivioEventi.iscriviti(callback)
+}
+
+/* ==================================================================
+   2. MISURAZIONI - le pesate
+   ================================================================== */
+
+/**
+ * Tutte le pesate, ordinate dalla piu' vecchia alla piu' recente.
+ * L'ordine e' importante: il grafico e i confronti lo danno per scontato.
+ */
+export async function leggiMisurazioni() {
+  const misurazioni = await archivioMisurazioni.leggi()
+  return [...misurazioni].sort((a, b) => a.data.localeCompare(b.data))
 }
 
 /**
- * Permette a una schermata di essere avvisata quando i dati cambiano.
+ * Registra una pesata.
  *
- * @param {(eventi:Array) => void} callback funzione da richiamare
- * @returns {() => void} funzione da chiamare per smettere di ascoltare
+ * Se esiste gia' una pesata per quella data, la SOSTITUISCE invece di
+ * aggiungerne una seconda: una sola misura al giorno tiene il grafico
+ * pulito ed e' quasi sempre quello che si intende ("mi sono ripesato,
+ * il primo numero non contava").
+ *
+ * @param {{data:string, peso:number}} dati
  */
-export function iscriviti(callback) {
-  ascoltatori.add(callback)
-  return () => ascoltatori.delete(callback)
+export async function salvaMisurazione({ data, peso }) {
+  const misurazioni = await archivioMisurazioni.leggi()
+
+  // Arrotondiamo a un decimale: la bilancia di casa non e' piu' precisa
+  // di cosi', e i decimali inventati sporcherebbero il grafico.
+  const pesoArrotondato = Math.round(Number(peso) * 10) / 10
+
+  const esistente = misurazioni.find((m) => m.data === data)
+
+  let nuovoElenco
+  let salvata
+  if (esistente) {
+    salvata = { ...esistente, peso: pesoArrotondato }
+    nuovoElenco = misurazioni.map((m) => (m.data === data ? salvata : m))
+  } else {
+    salvata = { id: nuovoIdMisurazione(), data, peso: pesoArrotondato }
+    nuovoElenco = [...misurazioni, salvata]
+  }
+
+  await archivioMisurazioni.scrivi(nuovoElenco)
+  return salvata
+}
+
+/** Elimina una pesata. */
+export async function eliminaMisurazione(id) {
+  const misurazioni = await archivioMisurazioni.leggi()
+  await archivioMisurazioni.scrivi(misurazioni.filter((m) => m.id !== id))
+}
+
+/** Sostituisce tutte le pesate (ripristino da copia di sicurezza). */
+export async function sostituisciMisurazioni(misurazioni) {
+  return archivioMisurazioni.scrivi([...misurazioni])
+}
+
+export function iscrivitiMisurazioni(callback) {
+  return archivioMisurazioni.iscriviti(callback)
+}
+
+/* ==================================================================
+   3. PREFERENZE - le impostazioni
+   ================================================================== */
+
+export async function leggiPreferenze() {
+  return archivioPreferenze.leggi()
+}
+
+/** Imposta una preferenza, lasciando le altre come stanno. */
+export async function salvaPreferenza(chiave, valore) {
+  const preferenze = await archivioPreferenze.leggi()
+  return archivioPreferenze.scrivi({ ...preferenze, [chiave]: valore })
+}
+
+export function iscrivitiPreferenze(callback) {
+  return archivioPreferenze.iscriviti(callback)
 }

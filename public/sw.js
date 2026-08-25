@@ -16,7 +16,7 @@
 
 // Cambia questo numero ogni volta che modifichi il file:
 // serve ad Android per accorgersi che c'e' una versione nuova.
-const VERSIONE = 'aegis-sw-v1'
+const VERSIONE = 'aegis-sw-v2'
 
 // --- 1. Installazione -------------------------------------------------
 // Viene eseguita la prima volta che il service worker viene registrato.
@@ -50,6 +50,19 @@ self.addEventListener('push', (event) => {
 
   const titolo = dati.titolo || 'Aegis'
 
+  // I pulsanti cambiano a seconda del tipo di evento:
+  //  - allenamento e pasto -> si risponde "Fatto" o "Saltato"
+  //  - peso                -> serve scrivere un numero, e Android NON permette
+  //    di scrivere dentro una notifica: quindi un solo pulsante, che apre
+  //    l'app gia' sul campo giusto.
+  const azioni =
+    dati.tipo === 'peso'
+      ? [{ action: 'registra-peso', title: 'Registra peso' }]
+      : [
+          { action: 'fatto', title: 'Fatto' },
+          { action: 'saltato', title: 'Saltato' },
+        ]
+
   const opzioni = {
     body: dati.testo || '',
     icon: '/icon-192.png',
@@ -62,11 +75,8 @@ self.addEventListener('push', (event) => {
     requireInteraction: true,
     // data: informazioni che ci ritroviamo quando l'utente tocca la notifica
     data: dati,
-    // actions: i due pulsanti sotto la notifica
-    actions: [
-      { action: 'fatto', title: 'Fatto' },
-      { action: 'saltato', title: 'Saltato' },
-    ],
+    // actions: i pulsanti sotto la notifica (vedi sopra)
+    actions: azioni,
   }
 
   // waitUntil dice ad Android: "non spegnermi finche' non ho finito"
@@ -87,7 +97,16 @@ self.addEventListener('notificationclick', (event) => {
       // Per ora apriamo semplicemente l'app, passandole l'informazione
       // tramite l'indirizzo (es. /?risposta=fatto&evento=abc123)
       const parametri = new URLSearchParams()
-      if (azione) parametri.set('risposta', azione)
+
+      if (azione === 'registra-peso' || dati.tipo === 'peso') {
+        // Il peso non e' "fatto/saltato": va scritto un numero.
+        // Portiamo l'utente sulla schermata Peso, con il campo gia' aperto.
+        parametri.set('vista', 'peso')
+        parametri.set('registra', '1')
+      } else if (azione) {
+        parametri.set('risposta', azione)
+      }
+
       if (dati.eventoId) parametri.set('evento', dati.eventoId)
 
       const url = '/' + (parametri.toString() ? '?' + parametri.toString() : '')

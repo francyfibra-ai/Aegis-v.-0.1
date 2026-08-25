@@ -436,3 +436,197 @@ h3 { font-size: 15px; margin: 0; }
 }
 .voce-nav span { font-size: 19px; line-height: 1.1; }
 .voce-nav.attiva { color: var(--accento); }
+
+/* ==================================================================
+   Schermata Peso e grafico
+   ================================================================== */
+
+/* --- Il numero grande ------------------------------------------- */
+.etichetta-figura {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--testo-tenue);
+}
+
+.figura-principale {
+  margin: 2px 0 0;
+  font-size: 52px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  /* Niente tabular-nums qui: su un numero grande le cifre a larghezza
+     fissa lasciano buchi antiestetici. Serve solo nelle colonne. */
+}
+
+.figura-principale .unita {
+  margin-left: 6px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--testo-tenue);
+}
+
+/* --- Le due variazioni sotto il numero -------------------------- */
+.griglia-variazioni {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bordo);
+}
+
+.variazione { min-width: 0; }
+
+.valore-variazione {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.totale-periodo {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--bordo);
+}
+
+/* --- Riga dei filtri: una sola riga, sopra al grafico ----------- */
+.riga-filtri {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filtro {
+  flex: 1 1 0;
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--bordo);
+  background: var(--scheda);
+  color: var(--testo-tenue);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.filtro.attivo {
+  border-color: var(--accento);
+  background: rgba(78, 163, 255, 0.14);
+  color: var(--testo);
+}
+
+/* --- Il grafico -------------------------------------------------- */
+.grafico {
+  position: relative;
+  margin-top: 10px;
+  /* touch-action: consente lo scorrimento verticale della pagina
+     mentre il dito scorre in orizzontale sul grafico */
+  touch-action: pan-y;
+  outline: none;
+}
+.grafico:focus-visible {
+  outline: 2px solid var(--accento);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* Le righe di riferimento: sottili, solide, un gradino sopra lo sfondo.
+   Mai tratteggiate: il tratteggio sembra indicare una soglia. */
+.griglia { stroke: var(--bordo); stroke-width: 1; }
+
+/* La riga verticale che segue il dito */
+.mirino { stroke: var(--testo-tenue); stroke-width: 1; opacity: 0.6; }
+
+.tacca-y {
+  fill: var(--testo-tenue);
+  font-size: 10px;
+  text-anchor: end;
+  font-variant-numeric: tabular-nums; /* qui servono: sono incolonnate */
+}
+
+.tacca-x {
+  fill: var(--testo-tenue);
+  font-size: 10px;
+  text-anchor: middle;
+}
+
+/* L'unico valore scritto sul grafico. Colore di testo, non della serie:
+   una tinta pensata per una linea e' poco leggibile come scritta. */
+.valore-finale {
+  fill: var(--testo);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Il riquadro che compare toccando il grafico */
+.riquadro-grafico {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  pointer-events: none; /* non deve rubare il tocco al grafico */
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: #0d1620;
+  border: 1px solid var(--bordo);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
+.riquadro-grafico strong {
+  display: block;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.riquadro-grafico span { font-size: 11px; color: var(--testo-tenue); }
+
+.didascalia { margin-top: 8px; font-size: 12px; }
+.vuoto-grafico { margin-top: 14px; }
+
+/* --- Elenco di tutte le pesate ---------------------------------- */
+.lista-pesate { list-style: none; margin: 10px 0 0; padding: 0; }
+
+.pesata {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border: none;
+  border-top: 1px solid var(--bordo);
+  background: none;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.lista-pesate li:first-child .pesata { border-top: none; }
+
+.data-pesata {
+  flex: 0 0 auto;
+  width: 64px;
+  font-size: 13px;
+  color: var(--testo-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+.peso-pesata {
+  flex: 1 1 auto;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.delta-pesata {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Permette ai pulsanti dell'obiettivo di andare a capo su schermi stretti */
+.gruppo-scelte.a-capo { flex-wrap: wrap; }
+.gruppo-scelte.a-capo .scelta { flex: 1 1 42%; }

@@ -17,7 +17,15 @@ import {
   notificaDiProva,
   appInstallata,
 } from '../lib/notifiche.js'
-import { leggiEventi, sostituisciTutto, INFO_ARCHIVIO } from '../lib/archivio.js'
+import {
+  leggiEventi,
+  sostituisciTutto,
+  leggiMisurazioni,
+  sostituisciMisurazioni,
+  leggiPreferenze,
+  salvaPreferenza,
+  INFO_ARCHIVIO,
+} from '../lib/archivio.js'
 import { FASI } from '../lib/fasi.js'
 
 export default function PaginaSetup() {
@@ -53,33 +61,62 @@ export default function PaginaSetup() {
     }
   }
 
-  /* --- Copia di sicurezza: scarica un file con dentro il piano --- */
-  async function esportaPiano() {
-    const eventi = await leggiEventi()
-    const testo = JSON.stringify(eventi, null, 2)
+  /* --- Copia di sicurezza -----------------------------------------
+     Salva TUTTO in un unico file: il piano, le pesate e le impostazioni.
+     Il campo "versione" serve a noi: se un domani cambiamo la forma dei
+     dati, sapremo riconoscere e convertire i file vecchi.            */
+  async function esportaTutto() {
+    const [eventi, misurazioni, preferenze] = await Promise.all([
+      leggiEventi(),
+      leggiMisurazioni(),
+      leggiPreferenze(),
+    ])
+
+    const copia = { versione: 1, salvataIl: new Date().toISOString(), eventi, misurazioni, preferenze }
+    const testo = JSON.stringify(copia, null, 2)
 
     // Creiamo al volo un file in memoria e simuliamo un clic per scaricarlo
     const blob = new Blob([testo], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `aegis-piano-${new Date().toISOString().slice(0, 10)}.json`
+    link.download = `aegis-copia-${new Date().toISOString().slice(0, 10)}.json`
     link.click()
     URL.revokeObjectURL(url) // libera la memoria
 
-    setMessaggio(`Esportati ${eventi.length} eventi.`)
+    setMessaggio(
+      `Salvati ${plurale(eventi.length, 'evento', 'eventi')} del piano e ${plurale(misurazioni.length, 'pesata', 'pesate')}.`
+    )
   }
 
-  /* --- Ripristino: rilegge un file esportato in precedenza --- */
-  async function importaPiano(fileScelto) {
+  /* --- Ripristino: rilegge un file salvato in precedenza --- */
+  async function importaTutto(fileScelto) {
     if (!fileScelto) return
     try {
       const testo = await fileScelto.text()
       const dati = JSON.parse(testo)
-      if (!Array.isArray(dati)) throw new Error('Il file non contiene un piano valido.')
 
-      await sostituisciTutto(dati)
-      setMessaggio(`Ripristinati ${dati.length} eventi. Il piano precedente è stato sostituito.`)
+      // Le primissime copie contenevano solo l'elenco degli eventi.
+      // Continuiamo ad accettarle, cosi' nessun file vecchio diventa inutile.
+      const copia = Array.isArray(dati)
+        ? { eventi: dati, misurazioni: [], preferenze: {} }
+        : dati
+
+      if (!Array.isArray(copia.eventi)) {
+        throw new Error('Il file non contiene una copia di Aegis.')
+      }
+
+      await sostituisciTutto(copia.eventi)
+      if (Array.isArray(copia.misurazioni)) {
+        await sostituisciMisurazioni(copia.misurazioni)
+      }
+      if (copia.preferenze?.obiettivoPeso) {
+        await salvaPreferenza('obiettivoPeso', copia.preferenze.obiettivoPeso)
+      }
+
+      setMessaggio(
+        `Ripristinati ${plurale(copia.eventi.length, 'evento', 'eventi')} e ${plurale(copia.misurazioni?.length ?? 0, 'pesata', 'pesate')}. I dati precedenti sono stati sostituiti.`
+      )
     } catch (errore) {
       setMessaggio('Errore nel ripristino: ' + errore.message)
     }
@@ -149,13 +186,16 @@ export default function PaginaSetup() {
         <p className="nota">{INFO_ARCHIVIO.spiegazione}</p>
 
         <div className="pulsantiera">
-          <button className="pulsante" onClick={esportaPiano}>
+          <button className="pulsante" onClick={esportaTutto}>
             Salva una copia
           </button>
           <button className="pulsante" onClick={() => selettoreFile.current?.click()}>
             Ripristina da copia
           </button>
         </div>
+        <p className="nota">
+          La copia contiene il piano settimanale, tutte le pesate e le impostazioni.
+        </p>
 
         {/* Campo per scegliere il file: invisibile, lo apre il pulsante sopra */}
         <input
@@ -164,7 +204,7 @@ export default function PaginaSetup() {
           accept="application/json,.json"
           style={{ display: 'none' }}
           onChange={(e) => {
-            importaPiano(e.target.files?.[0])
+            importaTutto(e.target.files?.[0])
             e.target.value = '' // permette di riscegliere lo stesso file
           }}
         />
@@ -203,6 +243,11 @@ function Controllo({ ok, etichetta, dettaglio }) {
       </div>
     </li>
   )
+}
+
+/* Scrive "1 evento" invece di "1 eventi". */
+function plurale(quantita, singolare, plurale_) {
+  return `${quantita} ${quantita === 1 ? singolare : plurale_}`
 }
 
 function etichettaStato(stato) {

@@ -40,12 +40,16 @@ Aegis/
 │   ├── styles.css              Aspetto grafico
 │   ├── components/
 │   │   ├── PaginaPiano.jsx     Schermata del piano settimanale
+│   │   ├── PaginaPeso.jsx      Schermata del controllo peso
 │   │   ├── PaginaSetup.jsx     Diagnostica e copie di sicurezza
-│   │   └── EditorEvento.jsx    Pannello per aggiungere/modificare un evento
+│   │   ├── EditorEvento.jsx    Pannello per aggiungere/modificare un evento
+│   │   ├── EditorPesata.jsx    Pannello per registrare una pesata
+│   │   └── GraficoPeso.jsx     Il grafico, disegnato a mano in SVG
 │   └── lib/
 │       ├── modello.js          FORMA DEI DATI: com'è fatto un evento
 │       ├── archivio.js         UNICO FILE CHE SALVA I DATI (vedi sotto)
-│       ├── usaEventi.js        Tiene le schermate aggiornate
+│       ├── statistichePeso.js  I conti dietro al grafico (medie, scale)
+│       ├── hooks.js            Tiene le schermate aggiornate
 │       ├── notifiche.js        Tutto ciò che riguarda le notifiche
 │       └── fasi.js             Elenco delle fasi di sviluppo
 │
@@ -87,11 +91,32 @@ bisogna pubblicare l'app online — è quello che facciamo nella Fase 1.
 |---|-------------------------------|-----------|
 | 1 | Setup del progetto            | fatta     |
 | 2 | Schermata piano settimanale   | in corso  |
+|   | └ controllo peso + grafico    | fatta     |
 | 3 | Salvataggio dati (database)   | da fare   |
 | 4 | Notifiche push                | da fare   |
 | 5 | Conferma Fatto / Saltato      | da fare   |
 
 L'elenco è anche dentro l'app: `src/lib/fasi.js`.
+
+---
+
+## I tre tipi di evento
+
+| Tipo | Come si risponde |
+|------|------------------|
+| 🏋️ Allenamento | Fatto / Saltato |
+| 🍽️ Pasto | Fatto / Saltato |
+| ⚖️ Peso | Si inserisce un **numero** (i chili) |
+
+Il peso è diverso dagli altri due, e questo ha una conseguenza pratica in Fase 4:
+la sua notifica non avrà i pulsanti "Fatto/Saltato" ma un solo pulsante, che apre
+l'app sul campo dove scrivere i chili. Android non permette di scrivere testo
+dentro una notifica web, quindi quel passaggio in più è inevitabile.
+
+Il promemoria del peso è un normale evento del piano (di partenza: **domenica
+08:00**). Si sposta come tutti gli altri, toccandolo nella schermata Piano. Il
+giorno conta meno di quanto sembri: è pesarsi sempre nelle **stesse condizioni**
+che rende il grafico leggibile.
 
 ---
 
@@ -103,6 +128,9 @@ finiscano davvero.
 
 Oggi salva nella memoria del telefono. In **Fase 3** riscriveremo solo quel
 file per farlo parlare col database online: le schermate non andranno toccate.
+
+Dentro tiene tre archivi separati: gli **eventi** del piano, le **misurazioni**
+di peso e le **preferenze**.
 
 > ⚠️ **Fino alla Fase 3 i dati vivono solo sul dispositivo che stai usando.**
 > Se cambi telefono o cancelli i dati del browser, spariscono. Nella schermata
