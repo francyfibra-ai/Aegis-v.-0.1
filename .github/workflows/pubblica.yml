@@ -1,20 +1,15 @@
 # ------------------------------------------------------------------
 #  PUBBLICAZIONE AUTOMATICA DI AEGIS SU GITHUB PAGES
 # ------------------------------------------------------------------
-#  Cosa fa: a ogni modifica del codice, GitHub compila l'app e ne
-#  scrive il risultato in un ramo separato chiamato "gh-pages".
-#  GitHub Pages pubblica il contenuto di quel ramo.
+#  Cosa fa: a ogni modifica del codice, GitHub compila l'app e la
+#  mette online da solo. Non serve fare nulla a mano.
 #
-#  PERCHE' COSI' E NON ALTRIMENTI
-#  Esiste anche un modo piu' moderno (l'azione "deploy-pages"), ma
-#  richiede che Pages sia stato acceso a mano nelle impostazioni,
-#  altrimenti risponde "404 - Ensure GitHub Pages has been enabled".
-#  Questo metodo invece si limita a scrivere in un ramo: e' il modo
-#  storico, e nella maggior parte dei casi GitHub lo pubblica da solo.
+#  IMPOSTAZIONE RICHIESTA (gia' fatta, una volta sola):
+#  Settings > Pages > Source = "GitHub Actions"
 #
-#  Il ramo "gh-pages" contiene SOLO l'app compilata, non il codice
-#  sorgente. Viene riscritto da capo a ogni pubblicazione: non c'e'
-#  nulla da conservare li' dentro, e non va modificato a mano.
+#  Se un domani quella voce venisse rimessa su "Deploy from a branch",
+#  questo file smetterebbe di pubblicare: e' il metodo ufficiale
+#  abbinato a "GitHub Actions", e i due non sono intercambiabili.
 # ------------------------------------------------------------------
 
 name: Pubblica Aegis
@@ -27,9 +22,11 @@ on:
   # Si puo' lanciare anche a mano, dalla scheda "Actions"
   workflow_dispatch:
 
-# Serve il permesso di scrittura, perche' creiamo un ramo
+# I permessi minimi necessari per pubblicare
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 # Se parte una pubblicazione mentre la precedente e' in corso, quella
 # vecchia viene annullata: online va sempre la versione piu' recente.
@@ -38,7 +35,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  pubblica:
+  # --- 1. Compila l'app -------------------------------------------
+  compila:
     runs-on: ubuntu-latest
     steps:
       - name: Scarica il codice
@@ -47,7 +45,8 @@ jobs:
       - name: Prepara Node.js
         uses: actions/setup-node@v4
         with:
-          # Stessa versione usata per provare l'app durante lo sviluppo
+          # Stessa versione usata per provare l'app durante lo sviluppo:
+          # cosi' la versione online e' compilata come quella verificata.
           node-version: '22'
           cache: 'npm'
 
@@ -59,31 +58,19 @@ jobs:
       - name: Compila
         run: npm run build
 
-      - name: Scrivi il risultato nel ramo gh-pages
-        run: |
-          cd dist
+      - name: Prepara i file per la pubblicazione
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
 
-          # Questo file vuoto dice a GitHub: "pubblica i file cosi' come
-          # sono". Senza, GitHub prova a interpretarli con Jekyll (un
-          # generatore di blog) e ignora le cartelle che iniziano con "_".
-          touch .nojekyll
-
-          # Costruiamo un ramo nuovo di zecca contenente solo l'app compilata
-          git init -b gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Pubblicazione automatica da ${GITHUB_SHA}"
-
-          # --force perche' ogni pubblicazione sostituisce interamente la
-          # precedente: nel ramo gh-pages non c'e' storia da conservare.
-          git push --force \
-            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Indirizzo dell'app
-        run: |
-          echo "Se la pubblicazione e' attiva, l'app e' qui:"
-          echo "https://francyfibra-ai.github.io/Aegis-v.-0.1/"
+  # --- 2. Mette online il risultato -------------------------------
+  pubblica:
+    needs: compila
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.messa-online.outputs.page_url }}
+    steps:
+      - name: Metti online
+        id: messa-online
+        uses: actions/deploy-pages@v4
