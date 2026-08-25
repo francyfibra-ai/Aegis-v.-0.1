@@ -37,6 +37,13 @@ select cron.schedule(
       url := 'https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/nome-promemoria',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
+        -- Il portone di Supabase pretende delle credenziali prima di
+        -- lasciar passare la chiamata verso la funzione. La chiave
+        -- pubblica basta: e' quella che sta gia' dentro l'app.
+        'Authorization', 'Bearer LA_CHIAVE_PUBBLICA',
+        -- Questa invece e' la protezione vera: la chiave pubblica la
+        -- conoscono tutti, il segreto no. E' cio' che impedisce a un
+        -- estraneo di far girare la sveglia a comando.
         'x-aegis-segreto', 'IL_TUO_SEGRETO'
       ),
       body := '{}'::jsonb,

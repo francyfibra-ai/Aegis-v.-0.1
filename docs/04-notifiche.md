@@ -159,7 +159,8 @@ Se la notifica arriva con i pulsanti *Fatto* e *Saltato*, la Fase 4 è finita.
 |---|---|
 | La prova dice `personeConsiderate: 0` | Il telefono non è registrato: rifai il Passo 6 |
 | La prova dice `notificheDovute: 0` sempre | Controlla di avere un evento nell'orario giusto, e il fuso orario nel profilo |
-| La funzione risponde `401` | Il segreto non coincide tra Passo 3 e Passo 5 |
+| `401` con `{"errore":"Non autorizzato"}` | È la funzione: il segreto non coincide tra Passo 3 e Passo 5 |
+| `401` con `INVALID_CREDENTIALS` | È il portone di Supabase: manca l'intestazione `Authorization` nel `cron.sql`, oppure va disattivato *Verify JWT* sulla funzione |
 | La funzione risponde `404` | Il nome nel `cron.sql` non coincide con quello reale della funzione |
 | `cron.job_run_details` mostra errori | La chiamata non parte: controlla l'indirizzo dentro `cron.sql` |
 | La sveglia gira ma non arriva nulla | Guarda i registri della funzione nel pannello: `fallite` maggiore di zero indica cosa ha risposto il servizio push |
