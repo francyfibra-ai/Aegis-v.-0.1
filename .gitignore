@@ -1,0 +1,15 @@
+# Dipendenze scaricate da npm (non vanno su GitHub, si riscaricano con "npm install")
+node_modules/
+
+# Cartella generata dalla compilazione (si rigenera con "npm run build")
+dist/
+
+# File con chiavi/segreti: NON devono mai finire su GitHub
+.env
+.env.local
+.env.*.local
+
+# File di sistema / editor
+.DS_Store
+*.log
+.vscode/

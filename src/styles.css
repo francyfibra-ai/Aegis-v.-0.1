@@ -1,0 +1,162 @@
+/*
+  styles.css - l'aspetto grafico dell'app.
+  E' scritto in CSS "normale", senza librerie esterne,
+  cosi' resta semplice da leggere e modificare.
+*/
+
+/* --- Colori dell'app, definiti una volta sola ------------------ */
+:root {
+  --sfondo: #0f1720;
+  --scheda: #17222e;
+  --bordo: #24333f;
+  --testo: #e8eef4;
+  --testo-tenue: #8fa3b5;
+  --accento: #4ea3ff;
+  --verde: #3ecf8e;
+  --rosso: #ff6b6b;
+  --raggio: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--sfondo);
+  color: var(--testo);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  /* Lascia spazio alla barra di stato/navigazione di Android */
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+
+.schermata {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+/* --- Intestazione --------------------------------------------- */
+.intestazione {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.logo {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(160deg, var(--accento), #2b6bb0);
+  font-weight: 700;
+  font-size: 22px;
+  color: #04121f;
+}
+
+h1 { font-size: 24px; margin: 0; letter-spacing: -0.3px; }
+h2 { font-size: 16px; margin: 0 0 4px; }
+
+.sottotitolo { margin: 0; color: var(--testo-tenue); font-size: 13px; }
+
+/* --- Schede (i riquadri) --------------------------------------- */
+.scheda {
+  background: var(--scheda);
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.nota { margin: 2px 0 0; color: var(--testo-tenue); font-size: 13px; }
+
+.messaggio {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(78, 163, 255, 0.12);
+  border: 1px solid rgba(78, 163, 255, 0.3);
+  font-size: 14px;
+}
+
+/* --- Lista dei controlli con pallino verde/rosso --------------- */
+.lista-controlli { list-style: none; margin: 14px 0 0; padding: 0; }
+
+.controllo {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 9px 0;
+  border-top: 1px solid var(--bordo);
+}
+.controllo:first-child { border-top: none; }
+.controllo strong { font-size: 14px; font-weight: 600; }
+
+.pallino {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 7px;
+  flex: 0 0 auto;
+}
+.controllo.ok .pallino { background: var(--verde); }
+.controllo.ko .pallino { background: var(--rosso); }
+
+/* --- Pulsanti --------------------------------------------------- */
+.pulsantiera { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
+.pulsante {
+  flex: 1 1 auto;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 11px;
+  border: 1px solid var(--bordo);
+  background: #1f2c3a;
+  color: var(--testo);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pulsante:disabled { opacity: 0.45; cursor: not-allowed; }
+.pulsante.primario {
+  background: var(--accento);
+  border-color: var(--accento);
+  color: #04121f;
+}
+
+/* --- Elenco delle fasi ----------------------------------------- */
+.lista-fasi { list-style: none; margin: 12px 0 0; padding: 0; }
+
+.fase {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--bordo);
+}
+.fase:first-child { border-top: none; }
+
+.fase-numero {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--bordo);
+  font-size: 13px;
+  color: var(--testo-tenue);
+}
+.fase-fatto .fase-numero { background: var(--verde); color: #04121f; border-color: var(--verde); }
+.fase-in-corso .fase-numero { background: var(--accento); color: #04121f; border-color: var(--accento); }
+
+.fase strong { font-size: 14px; }
+
+.fase-stato {
+  margin-left: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--testo-tenue);
+}

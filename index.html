@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Fa in modo che l'app si adatti allo schermo del telefono -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- Colore della barra di stato di Android quando l'app e' installata -->
+    <meta name="theme-color" content="#0f1720" />
+
+    <title>Aegis</title>
+
+    <!-- Il "manifest" e' il file che dice ad Android:
+         "questa pagina web puo' essere installata come app". -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon-192.png" />
+  </head>
+  <body>
+    <!-- Qui dentro React disegna tutta l'interfaccia -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

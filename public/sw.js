@@ -1,0 +1,113 @@
+/*
+  SERVICE WORKER  -  public/sw.js
+  ---------------------------------------------------------------
+  Cos'e': un piccolo programma che il telefono tiene in esecuzione
+  IN SECONDO PIANO, anche quando l'app Aegis e' chiusa.
+
+  A cosa serve qui:
+   1. Ricevere le notifiche push inviate dal server  (Fase 4)
+   2. Gestire il tocco sulla notifica e sui pulsanti
+      "Fatto" / "Saltato"                            (Fase 5)
+
+  ATTENZIONE: questo file NON viene elaborato da Vite.
+  Va scritto in JavaScript "semplice" e vive dentro /public,
+  cosi' viene pubblicato tale e quale all'indirizzo /sw.js
+*/
+
+// Cambia questo numero ogni volta che modifichi il file:
+// serve ad Android per accorgersi che c'e' una versione nuova.
+const VERSIONE = 'aegis-sw-v1'
+
+// --- 1. Installazione -------------------------------------------------
+// Viene eseguita la prima volta che il service worker viene registrato.
+self.addEventListener('install', (event) => {
+  console.log('[sw] installato', VERSIONE)
+  // skipWaiting = attiva subito la versione nuova, senza aspettare
+  // che l'utente chiuda tutte le schede.
+  self.skipWaiting()
+})
+
+// --- 2. Attivazione ---------------------------------------------------
+self.addEventListener('activate', (event) => {
+  console.log('[sw] attivo', VERSIONE)
+  // clients.claim = prende il controllo delle pagine gia' aperte.
+  event.waitUntil(self.clients.claim())
+})
+
+// --- 3. Arrivo di una notifica push -----------------------------------
+// Per ora non e' ancora collegato a nessun server (lo faremo in Fase 4),
+// ma il codice e' gia' pronto a ricevere il messaggio.
+self.addEventListener('push', (event) => {
+  // Il server ci mandera' un messaggio in formato JSON, tipo:
+  // { "titolo": "Allenamento", "testo": "Petto e tricipiti", "eventoId": "..." }
+  let dati = {}
+  try {
+    dati = event.data ? event.data.json() : {}
+  } catch (e) {
+    // Se il messaggio non e' JSON valido, lo trattiamo come testo semplice
+    dati = { titolo: 'Aegis', testo: event.data ? event.data.text() : '' }
+  }
+
+  const titolo = dati.titolo || 'Aegis'
+
+  const opzioni = {
+    body: dati.testo || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    // vibrate: fa vibrare il telefono (pausa/vibrazione in millisecondi)
+    vibrate: [100, 50, 100],
+    // tag: notifiche con lo stesso tag si sostituiscono invece di accumularsi
+    tag: dati.eventoId || 'aegis-generico',
+    // requireInteraction: la notifica resta finche' non la tocchi
+    requireInteraction: true,
+    // data: informazioni che ci ritroviamo quando l'utente tocca la notifica
+    data: dati,
+    // actions: i due pulsanti sotto la notifica
+    actions: [
+      { action: 'fatto', title: 'Fatto' },
+      { action: 'saltato', title: 'Saltato' },
+    ],
+  }
+
+  // waitUntil dice ad Android: "non spegnermi finche' non ho finito"
+  event.waitUntil(self.registration.showNotification(titolo, opzioni))
+})
+
+// --- 4. Tocco sulla notifica o su un pulsante -------------------------
+self.addEventListener('notificationclick', (event) => {
+  const azione = event.action // 'fatto', 'saltato', oppure '' se ha toccato il corpo
+  const dati = event.notification.data || {}
+
+  // Chiude la notifica appena toccata
+  event.notification.close()
+
+  event.waitUntil(
+    (async () => {
+      // In Fase 5 qui invieremo la risposta al database.
+      // Per ora apriamo semplicemente l'app, passandole l'informazione
+      // tramite l'indirizzo (es. /?risposta=fatto&evento=abc123)
+      const parametri = new URLSearchParams()
+      if (azione) parametri.set('risposta', azione)
+      if (dati.eventoId) parametri.set('evento', dati.eventoId)
+
+      const url = '/' + (parametri.toString() ? '?' + parametri.toString() : '')
+
+      // Se l'app e' gia' aperta la portiamo in primo piano,
+      // altrimenti apriamo una nuova finestra.
+      const finestre = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      })
+
+      for (const finestra of finestre) {
+        if ('focus' in finestra) {
+          // Avvisa l'app gia' aperta di cosa e' stato premuto
+          finestra.postMessage({ tipo: 'risposta-notifica', azione, dati })
+          return finestra.focus()
+        }
+      }
+
+      return self.clients.openWindow(url)
+    })()
+  )
+})
