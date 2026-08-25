@@ -7,8 +7,12 @@
   Per cambiare qualcosa si modificano quelli e si rilancia:
       node supabase/unisci-funzione.mjs
 
-  Da incollare nel pannello Supabase, sezione Edge Functions,
-  in una funzione chiamata "promemoria".
+  Serve SOLO per incollare a mano nel pannello Supabase, quando non si
+  usa la pubblicazione automatica da GitHub (vedi il workflow
+  .github/workflows/pubblica-funzione.yml, che e' la via consigliata).
+
+  Se lo incolli nel pannello, il file li' dentro deve chiamarsi
+  index.ts: e' il nome che Supabase cerca come punto di partenza.
 */
 
 /* ============ da webpush.ts ============ */

@@ -49,32 +49,54 @@ Aggiunge due tabelle: dove mandare le notifiche, e quali sono già state mandate
 
 ## Passo 2 — Pubblicare la sveglia
 
-Pannello Supabase → **Edge Functions** → **Deploy a new function** →
-**Via Editor**
+Ci sono due strade. **La prima è molto più affidabile**: l'editor del pannello
+richiede di azzeccare il nome del file, di cancellare ogni riga del codice di
+esempio e di incollarne 750 da telefono — tre modi diversi di sbagliare, e
+nessuno dei tre dà un errore comprensibile.
 
-- **Nome della funzione**: annotatelo, qualunque sia. Il pannello a volte
-  precompila il campo, ed è facile ritrovarsi con un nome diverso da quello
-  previsto. Il nome finisce nell'indirizzo che la sveglia chiamerà, e se i due
-  non coincidono si ottiene `404` a ogni giro.
-  *(In questo progetto la funzione si chiama `nome-promemoria`, e `cron.sql`
-  punta lì.)*
-- ⚠️ **Il file nell'editor deve chiamarsi `index.ts`.** È il nome che Supabase
-  cerca come punto di partenza: rinominarlo (per esempio in `completo.ts`) fa
-  fallire la pubblicazione con
+### 🅰️ Da GitHub, automaticamente (consigliato)
+
+Una volta impostata, ogni modifica al codice della funzione si pubblica da
+sola, come già succede per l'app.
+
+**Serve una chiave d'accesso, una volta sola:**
+
+1. Vai su <https://supabase.com/dashboard/account/tokens>
+2. **Generate new token**, chiamalo `aegis-github`
+3. **Copialo subito**: Supabase lo mostra una volta sola
+4. Vai su
+   <https://github.com/francyfibra-ai/Aegis-v.-0.1/settings/secrets/actions>
+   *(da telefono serve la "Sito desktop" di Chrome)*
+5. **New repository secret**
+   - **Name**: `SUPABASE_ACCESS_TOKEN`
+   - **Secret**: la chiave copiata
+6. **Add secret**
+
+**Poi pubblica:**
+
+<https://github.com/francyfibra-ai/Aegis-v.-0.1/actions> → **Pubblica la
+sveglia** → **Run workflow**
+
+> ⚠️ Quella chiave dà accesso al tuo progetto Supabase: va solo nel segreto di
+> GitHub, che è cifrato e non compare nei registri. Non va mandata a nessuno.
+
+La funzione viene pubblicata con il nome **`promemoria`**, e con la verifica
+del gettone già disattivata (è scritto in `supabase/config.toml`): un problema
+in meno da cercare nel pannello.
+
+### 🅱️ A mano, dall'editor del pannello
+
+Supabase → **Edge Functions** → **Deploy a new function** → **Via Editor**
+
+- ⚠️ **Il file deve chiamarsi `index.ts`.** È il nome che Supabase cerca come
+  punto di partenza: rinominarlo fa fallire la pubblicazione con
   *«Entrypoint path does not exist … /source/index.ts»*
-- **Cancella tutto** il codice di esempio — se ne resta anche solo una riga, la
-  funzione risponde `{"message":"Hello undefined!"}` e sembra funzionare pur
-  non facendo nulla
-- Incolla il contenuto di **`supabase/functions/promemoria/completo.ts`**
-  dentro `index.ts`
-- Se compare l'opzione **Verify JWT** (o "Enforce JWT verification"),
-  **disattivala**: la funzione si protegge da sola con un segreto, e con la
-  verifica attiva la sveglia non riuscirebbe a chiamarla
+- ⚠️ **Cancella tutto** il codice di esempio. Se ne resta anche una riga, la
+  funzione risponde `{"message":"Hello undefined!"}`: sembra funzionare, e
+  invece non fa nulla
+- Incolla il contenuto di **`supabase/funzione-da-incollare.ts`**
+- Se compare l'opzione **Verify JWT**, disattivala
 - **Deploy**
-
-> Il file da incollare è uno solo ma lungo (circa 750 righe). È generato
-> unendo i tre file in `supabase/functions/promemoria/`, che restano la
-> versione da leggere e modificare.
 
 ---
 

@@ -46,11 +46,18 @@ const intestazione = `/*
   Per cambiare qualcosa si modificano quelli e si rilancia:
       node supabase/unisci-funzione.mjs
 
-  Da incollare nel pannello Supabase, sezione Edge Functions,
-  in una funzione chiamata "promemoria".
+  Serve SOLO per incollare a mano nel pannello Supabase, quando non si
+  usa la pubblicazione automatica da GitHub (vedi il workflow
+  .github/workflows/pubblica-funzione.yml, che e' la via consigliata).
+
+  Se lo incolli nel pannello, il file li' dentro deve chiamarsi
+  index.ts: e' il nome che Supabase cerca come punto di partenza.
 */
 
 `
 
-writeFileSync(cartella + 'completo.ts', intestazione + pezzi.join('\n'))
-console.log('creato ' + cartella + 'completo.ts')
+// Il file unito sta FUORI dalla cartella della funzione: dentro, la
+// riga di comando di Supabase lo troverebbe accanto a index.ts e
+// proverebbe a interpretarlo come codice a se' stante.
+writeFileSync('supabase/funzione-da-incollare.ts', intestazione + pezzi.join('\n'))
+console.log('creato supabase/funzione-da-incollare.ts')

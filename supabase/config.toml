@@ -1,0 +1,10 @@
+# Configurazione del progetto Supabase.
+# Serve alla riga di comando per sapere dove pubblicare le funzioni.
+
+project_id = "zikfldmqdsacywvxiuab"
+
+[functions.promemoria]
+# Niente verifica del gettone: la funzione si protegge da sola con il
+# segreto in intestazione (vedi AEGIS_SEGRETO). Impostarlo qui evita di
+# doverlo cercare nel pannello, dove l'opzione non e' sempre visibile.
+verify_jwt = false
