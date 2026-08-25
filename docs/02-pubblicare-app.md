@@ -31,56 +31,44 @@ repository.
 
 ---
 
-## Passo 1 — Accendere GitHub Pages
+## Come è configurata (già fatto, non serve rifarlo)
 
-Nella maggior parte dei casi **non serve fare nulla**: la pubblicazione
-avviene da sola. Segui questo passo solo se, dopo qualche minuto,
-l'indirizzo del Passo 2 non risponde.
+In **Settings → Pages → Source** è impostato **GitHub Actions**.
 
-### 📱 Dal telefono (attenzione, qui casca l'asino)
+Con quell'impostazione, il file `.github/workflows/pubblica.yml` compila l'app
+e la mette online da solo a ogni modifica del codice.
 
-Su GitHub da telefono **la voce "Settings" non è visibile** tra le schede:
-si vede `Code · Issues · Pull requests · Actions · More ▾`. È nascosta dentro
-**More ▾**.
+> ⚠️ Se un domani quella voce venisse rimessa su *"Deploy from a branch"*, la
+> pubblicazione **smetterebbe di funzionare**: i due metodi non sono
+> intercambiabili. In quel caso va cambiato anche il workflow.
 
-1. Apri la repository, tocca **More ▾** in fondo alla fila di schede
-2. Nell'elenco che si apre, tocca **Settings**
-3. Scorri la pagina fino alla sezione **Pages** (su telefono le voci sono una
-   sotto l'altra, non in una colonna a sinistra: bisogna scorrere parecchio)
+### Come ci si arriva, se serve rimetterci mano
 
-Scorciatoia, se preferisci: incolla direttamente questo indirizzo nel browser
-<https://github.com/francyfibra-ai/Aegis-v.-0.1/settings/pages>
+**📱 Dal telefono** — è la parte scomoda, perché GitHub nasconde metà delle
+voci. Il modo più semplice è chiedere a Chrome la versione da computer:
 
-### 💻 Dal computer
+1. In Chrome, tocca i **tre puntini ⋮** in alto a destra
+2. Spunta **"Sito desktop"**
+3. Vai a `github.com/francyfibra-ai/Aegis-v.-0.1/settings/pages`
 
-Scheda **Settings** in alto → voce **Pages** nella colonna di sinistra.
+La pagina diventa piccola ma completa, e si ingrandisce con le dita.
+Senza questo passaggio, "Settings" è sepolto dentro il menu **More ▾**.
 
-### Cosa impostare, una volta arrivato
+**💻 Dal computer** — scheda **Settings** → **Pages** nella colonna di sinistra.
 
-Alla voce **Source** (o "Build and deployment") scegli:
+### Se un giorno non pubblicasse più
 
-- **Deploy from a branch** → ramo **gh-pages** → cartella **/ (root)** → **Save**
+- **L'email dell'account deve essere verificata.** GitHub rifiuta di pubblicare
+  se non lo è, e non lo dice con un messaggio comprensibile.
+  Si controlla su <https://github.com/settings/emails>.
+- Lo stato di ogni pubblicazione è sempre qui:
+  <https://github.com/francyfibra-ai/Aegis-v.-0.1/actions>
 
 ---
 
 ## Passo 2 — Controllare che sia online
 
-Aspetta un paio di minuti dopo il ✓ verde in **Actions**, poi apri:
-
 **<https://francyfibra-ai.github.io/Aegis-v.-0.1/>**
-
-Se risponde, hai finito: non dovrai più tornare qui.
-
-> ⚠️ **Le X rosse dei primi tentativi sono attese.** I primissimi tentativi
-> usavano un metodo di pubblicazione che richiedeva per forza un passaggio
-> manuale. Contano solo i tentativi più recenti.
-
-### Se l'email dell'account non è verificata
-
-GitHub **non pubblica** siti se l'indirizzo email dell'account non è confermato.
-Si controlla su <https://github.com/settings/emails>: se accanto alla tua email
-c'è scritto **Unverified**, tocca *Resend verification email* e conferma dalla
-posta. È un blocco che non dà nessun messaggio d'errore comprensibile.
 
 ---
 
@@ -133,6 +121,15 @@ promemoria veri, agli orari del tuo piano.
 | Pallino rosso su "Permesso notifiche" dopo aver detto no | Impostazioni Android → App → Aegis → Notifiche → attiva |
 | La notifica di prova non arriva | Controlla che Aegis non sia in "Risparmio energetico": Impostazioni → Batteria → Aegis → Senza restrizioni |
 | Le modifiche non si vedono | Chiudi del tutto l'app e riaprila: il programma di sfondo si aggiorna alla riapertura |
+
+---
+
+## Nota: il ramo `gh-pages`
+
+Nella repository c'è un ramo chiamato `gh-pages`, rimasto da un tentativo
+precedente fatto quando Pages non era ancora attivo. **Non viene più usato**:
+con Source su "GitHub Actions" nessuno lo legge. È innocuo e si può cancellare
+in qualsiasi momento.
 
 ---
 
