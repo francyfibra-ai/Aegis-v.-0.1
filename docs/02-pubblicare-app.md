@@ -33,27 +33,54 @@ repository.
 
 ## Passo 1 — Accendere GitHub Pages
 
-1. Apri: <https://github.com/francyfibra-ai/Aegis-v.-0.1/settings/pages>
-   (è la scheda **Settings** della repository, voce **Pages** nella colonna
-   di sinistra)
-2. Alla voce **Source** (o "Build and deployment") c'è un menu a tendina
-3. Scegli **GitHub Actions** — *non* "Deploy from a branch"
-4. Non serve premere Salva: la scelta è immediata
+Nella maggior parte dei casi **non serve fare nulla**: la pubblicazione
+avviene da sola. Segui questo passo solo se, dopo qualche minuto,
+l'indirizzo del Passo 2 non risponde.
+
+### 📱 Dal telefono (attenzione, qui casca l'asino)
+
+Su GitHub da telefono **la voce "Settings" non è visibile** tra le schede:
+si vede `Code · Issues · Pull requests · Actions · More ▾`. È nascosta dentro
+**More ▾**.
+
+1. Apri la repository, tocca **More ▾** in fondo alla fila di schede
+2. Nell'elenco che si apre, tocca **Settings**
+3. Scorri la pagina fino alla sezione **Pages** (su telefono le voci sono una
+   sotto l'altra, non in una colonna a sinistra: bisogna scorrere parecchio)
+
+Scorciatoia, se preferisci: incolla direttamente questo indirizzo nel browser
+<https://github.com/francyfibra-ai/Aegis-v.-0.1/settings/pages>
+
+### 💻 Dal computer
+
+Scheda **Settings** in alto → voce **Pages** nella colonna di sinistra.
+
+### Cosa impostare, una volta arrivato
+
+Alla voce **Source** (o "Build and deployment") scegli:
+
+- **Deploy from a branch** → ramo **gh-pages** → cartella **/ (root)** → **Save**
 
 ---
 
-## Passo 2 — Far partire la pubblicazione
+## Passo 2 — Controllare che sia online
 
-1. Apri la scheda **Actions**:
-   <https://github.com/francyfibra-ai/Aegis-v.-0.1/actions>
-2. Nella colonna di sinistra clicca **Pubblica Aegis**
-3. A destra compare il pulsante **Run workflow** → cliccalo, poi conferma
-   cliccando di nuovo **Run workflow** nel riquadro che si apre
-4. Aspetta 1-2 minuti. Quando compare il **segno di spunta verde ✓** è online
+Aspetta un paio di minuti dopo il ✓ verde in **Actions**, poi apri:
 
-> ⚠️ **Se avevi già visto una X rossa prima di fare il Passo 1, è normale.**
-> Il tentativo automatico parte appena il codice viene salvato, e fallisce
-> finché Pages non è acceso. Dopo il Passo 1, rilancialo come sopra.
+**<https://francyfibra-ai.github.io/Aegis-v.-0.1/>**
+
+Se risponde, hai finito: non dovrai più tornare qui.
+
+> ⚠️ **Le X rosse dei primi tentativi sono attese.** I primissimi tentativi
+> usavano un metodo di pubblicazione che richiedeva per forza un passaggio
+> manuale. Contano solo i tentativi più recenti.
+
+### Se l'email dell'account non è verificata
+
+GitHub **non pubblica** siti se l'indirizzo email dell'account non è confermato.
+Si controlla su <https://github.com/settings/emails>: se accanto alla tua email
+c'è scritto **Unverified**, tocca *Resend verification email* e conferma dalla
+posta. È un blocco che non dà nessun messaggio d'errore comprensibile.
 
 ---
 
