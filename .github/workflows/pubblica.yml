@@ -42,7 +42,9 @@ jobs:
       - name: Prepara Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Stessa versione usata per provare l'app durante lo sviluppo:
+          # cosi' la versione online e' compilata come quella verificata.
+          node-version: '22'
           cache: 'npm'
 
       - name: Installa le librerie
