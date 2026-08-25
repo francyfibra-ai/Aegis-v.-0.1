@@ -84,6 +84,16 @@ export default function PaginaPiano() {
 
       {errore && <p className="errore">{errore}</p>}
 
+      {/* Promemoria non ancora attivi: lo diciamo dove si inseriscono
+          gli orari, che e' il punto in cui uno se lo aspetta.
+          Da togliere alla fine della Fase 4. */}
+      {eventi.length > 0 && (
+        <p className="messaggio tenue">
+          ⏰ Gli orari sono salvati ma <strong>non fanno ancora suonare
+          niente</strong>: i promemoria automatici arrivano con la Fase 4.
+        </p>
+      )}
+
       {/* --- Primo avvio: piano vuoto --- */}
       {eventi.length === 0 && (
         <div className="scheda vuoto">

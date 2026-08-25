@@ -630,3 +630,20 @@ h3 { font-size: 15px; margin: 0; }
 /* Permette ai pulsanti dell'obiettivo di andare a capo su schermi stretti */
 .gruppo-scelte.a-capo { flex-wrap: wrap; }
 .gruppo-scelte.a-capo .scelta { flex: 1 1 42%; }
+
+/* Riquadro di avviso: qualcosa che l'utente deve sapere, ma che non e'
+   un errore. Toni caldi invece che rossi. */
+.scheda.avviso {
+  border-color: rgba(217, 89, 38, 0.45);
+  background: linear-gradient(0deg, rgba(217, 89, 38, 0.07), rgba(217, 89, 38, 0.07)), var(--scheda);
+}
+.scheda.avviso h3 { margin-bottom: 8px; }
+.scheda.avviso .nota + .nota { margin-top: 8px; }
+
+/* Versione discreta del messaggio azzurro, per le note ricorrenti */
+.messaggio.tenue {
+  margin: 0 0 14px;
+  background: rgba(143, 163, 181, 0.1);
+  border-color: rgba(143, 163, 181, 0.25);
+  font-size: 13px;
+}

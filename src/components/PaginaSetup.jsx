@@ -180,6 +180,28 @@ export default function PaginaSetup() {
         </div>
       </section>
 
+      {/* --- Avviso: i promemoria automatici non esistono ancora ---
+             Serve perche' la diagnostica qui sopra dice "permesso concesso"
+             e verrebbe naturale pensare che gli orari del piano suonino.
+             Da togliere quando la Fase 4 sara' completata. --- */}
+      <section className="scheda avviso">
+        <h3>⏰ Promemoria automatici: non ancora attivi</h3>
+        <p className="nota">
+          La notifica di prova funziona, ma <strong>gli orari del piano non
+          fanno ancora suonare niente</strong>: al momento nessuno controlla
+          l'orologio.
+        </p>
+        <p className="nota">
+          Non è un guasto, è che quella parte non è ancora costruita: serve un
+          programma nel cloud che ogni minuto guardi l'ora e invii la notifica.
+          Il telefono da solo non può farlo, perché Android sospende le app web
+          per risparmiare batteria. È la <strong>Fase 4</strong>.
+        </p>
+        <p className="nota">
+          Fino ad allora Aegis serve a tenere il piano e a registrare le pesate.
+        </p>
+      </section>
+
       {/* --- Dati e copia di sicurezza --- */}
       <section className="scheda">
         <h3>I tuoi dati</h3>
