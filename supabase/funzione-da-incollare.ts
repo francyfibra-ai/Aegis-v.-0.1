@@ -730,30 +730,71 @@ async function lavora(soloProva: boolean) {
    Punto di ingresso
    ------------------------------------------------------------------ */
 
+/**
+ * Quali variabili protette mancano.
+ *
+ * Riportarne i NOMI e' sicuro: non svela nessun valore, e senza questa
+ * informazione un errore di configurazione e' indistinguibile da un
+ * segreto sbagliato - due problemi che si risolvono in posti diversi.
+ */
+function variabiliMancanti(): string[] {
+  const richieste: Record<string, string | undefined> = {
+    AEGIS_SEGRETO: SEGRETO,
+    AEGIS_VAPID_PUBBLICA: VAPID_PUBBLICA,
+    AEGIS_VAPID_PRIVATA: VAPID_PRIVATA,
+    SUPABASE_URL: URL_DATABASE,
+    SUPABASE_SERVICE_ROLE_KEY: CHIAVE_SERVIZIO,
+  }
+  return Object.keys(richieste).filter((nome) => !richieste[nome])
+}
+
 Deno.serve(async (richiesta) => {
+  const risposta = (dati: unknown, stato = 200) =>
+    new Response(JSON.stringify(dati, null, 2), {
+      status: stato,
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+  // Prima di tutto: la funzione e' configurata?
+  // Questo controllo risponde anche senza segreto, apposta: se il
+  // segreto e' proprio quello che manca, chiedere il segreto per
+  // sapere che manca il segreto sarebbe un vicolo cieco.
+  const mancanti = variabiliMancanti()
+  if (mancanti.length > 0) {
+    return risposta(
+      {
+        errore: 'Configurazione incompleta',
+        variabiliMancanti: mancanti,
+        cosaFare:
+          'Aggiungi queste variabili in Supabase, sezione Edge Functions > Secrets. ' +
+          'SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY di norma le fornisce Supabase da se\'.',
+      },
+      500
+    )
+  }
+
   // Solo chi conosce il segreto puo' far girare la sveglia.
   // Il segreto viaggia in un'intestazione, non nell'indirizzo: gli
   // indirizzi finiscono nei registri dei server, le intestazioni no.
   const segretoRicevuto = richiesta.headers.get('x-aegis-segreto')
-  if (!SEGRETO || segretoRicevuto !== SEGRETO) {
-    return new Response(JSON.stringify({ errore: 'Non autorizzato' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    })
+  if (segretoRicevuto !== SEGRETO) {
+    return risposta(
+      {
+        errore: 'Segreto non corrispondente',
+        cosaFare: segretoRicevuto
+          ? "Il segreto e' arrivato ma e' diverso da AEGIS_SEGRETO. Controlla che non ci siano spazi in piu' nel valore salvato nei Secrets."
+          : "La chiamata non conteneva l'intestazione x-aegis-segreto.",
+      },
+      401
+    )
   }
 
   const soloProva = new URL(richiesta.url).searchParams.get('prova') === '1'
 
   try {
-    const resoconto = await lavora(soloProva)
-    return new Response(JSON.stringify(resoconto, null, 2), {
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return risposta(await lavora(soloProva))
   } catch (errore) {
     console.error('[promemoria] errore:', errore)
-    return new Response(JSON.stringify({ errore: String(errore) }, null, 2), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return risposta({ errore: String(errore) }, 500)
   }
 })
