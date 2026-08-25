@@ -38,9 +38,16 @@ select cron.schedule(
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
         -- Il portone di Supabase pretende delle credenziali prima di
-        -- lasciar passare la chiamata verso la funzione. La chiave
-        -- pubblica basta: e' quella che sta gia' dentro l'app.
-        'Authorization', 'Bearer LA_CHIAVE_PUBBLICA',
+        -- lasciar passare la chiamata, ANCHE con la verifica del
+        -- gettone disattivata sulla funzione.
+        --
+        -- L'intestazione deve chiamarsi 'apikey'. Metterla in
+        -- 'Authorization' non basta: si ottiene INVALID_CREDENTIALS,
+        -- che sembra un problema di segreto e invece non lo e'.
+        --
+        -- La chiave pubblica va benissimo: e' quella che sta gia'
+        -- dentro l'app, la conosce chiunque.
+        'apikey', 'LA_CHIAVE_PUBBLICA',
         -- Questa invece e' la protezione vera: la chiave pubblica la
         -- conoscono tutti, il segreto no. E' cio' che impedisce a un
         -- estraneo di far girare la sveglia a comando.
