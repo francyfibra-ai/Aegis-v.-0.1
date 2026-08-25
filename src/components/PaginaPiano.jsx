@@ -5,7 +5,7 @@
   Mostra i sette giorni, ognuno con i suoi eventi ordinati per orario,
   e permette di aggiungerne, modificarne ed eliminarne.
 */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   GIORNI,
   tipoEvento,
@@ -21,6 +21,7 @@ import {
   infoArchivio,
 } from '../lib/archivio.js'
 import { usaEventi } from '../lib/hooks.js'
+import { iscrittoAllePush } from '../lib/push.js'
 import EditorEvento from './EditorEvento.jsx'
 
 export default function PaginaPiano() {
@@ -30,6 +31,13 @@ export default function PaginaPiano() {
   // Contiene { evento } se stiamo modificando, { giorno } se stiamo creando.
   const [editor, setEditor] = useState(null)
   const [errore, setErrore] = useState('')
+
+  // I promemoria sono accesi su questo dispositivo? Se si', l'avviso
+  // "gli orari non fanno suonare niente" non ha piu' ragione di esserci.
+  const [promemoriaAttivi, setPromemoriaAttivi] = useState(true)
+  useEffect(() => {
+    iscrittoAllePush().then(setPromemoriaAttivi)
+  }, [])
 
   const oggi = giornoDiOggi()
 
@@ -87,10 +95,10 @@ export default function PaginaPiano() {
       {/* Promemoria non ancora attivi: lo diciamo dove si inseriscono
           gli orari, che e' il punto in cui uno se lo aspetta.
           Da togliere alla fine della Fase 4. */}
-      {eventi.length > 0 && (
+      {eventi.length > 0 && !promemoriaAttivi && (
         <p className="messaggio tenue">
-          ⏰ Gli orari sono salvati ma <strong>non fanno ancora suonare
-          niente</strong>: i promemoria automatici arrivano con la Fase 4.
+          ⏰ Gli orari sono salvati ma <strong>non ti avvisa ancora nessuno</strong>:
+          i promemoria si attivano dalla schermata Setup.
         </p>
       )}
 

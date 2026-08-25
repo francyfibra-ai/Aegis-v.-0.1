@@ -31,6 +31,26 @@ export const SUPABASE_URL = 'https://zikfldmqdsacywvxiuab.supabase.co'
 // Chiave pubblica, indicata come "anon public" oppure "publishable"
 export const SUPABASE_CHIAVE_PUBBLICA = 'sb_publishable_enjVIUKuaDY_bBvJeK0NNw_8wv65exW'
 
+/*
+  LA CHIAVE PUBBLICA DELLE NOTIFICHE (VAPID)
+
+  Fa coppia con una chiave privata custodita in Supabase. Il telefono
+  registra questa: da quel momento accettera' notifiche solo se firmate
+  con la privata corrispondente. E' cio' che impedisce a chiunque altro
+  di mandarti notifiche fingendosi Aegis.
+
+  Anche questa e' pubblica per natura: sta nell'app, visibile a tutti.
+  Cambiarla invalida tutte le iscrizioni esistenti, che andrebbero
+  rifatte da ogni dispositivo.
+*/
+export const VAPID_CHIAVE_PUBBLICA =
+  'BMTcVq-gMaVSci9uCvjB25s9c9BHCelyx8VAitTrR1YA8h22JXgxdIMP2YI5aKOhZ017l45D1vVxzBQMECqIfF8'
+
+/** Dice se le notifiche push sono state configurate. */
+export function pushConfigurato() {
+  return Boolean(VAPID_CHIAVE_PUBBLICA)
+}
+
 /**
  * Dice se i due valori sono stati inseriti.
  * Finche' sono vuoti l'app continua a funzionare salvando sul telefono:

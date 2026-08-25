@@ -27,7 +27,7 @@ export const FASI = [
   {
     numero: 4,
     titolo: 'Notifiche push',
-    stato: 'da-fare',
+    stato: 'in-corso',
     descrizione: 'Promemoria automatici agli orari del piano, anche ad app chiusa.',
   },
   {
