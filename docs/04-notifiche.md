@@ -52,8 +52,12 @@ Aggiunge due tabelle: dove mandare le notifiche, e quali sono già state mandate
 Pannello Supabase → **Edge Functions** → **Deploy a new function** →
 **Via Editor**
 
-- **Nome della funzione**: `promemoria` (esattamente così: il nome finisce
-  nell'indirizzo che la sveglia chiamerà)
+- **Nome della funzione**: annotatelo, qualunque sia. Il pannello a volte
+  precompila il campo, ed è facile ritrovarsi con un nome diverso da quello
+  previsto. Il nome finisce nell'indirizzo che la sveglia chiamerà, e se i due
+  non coincidono si ottiene `404` a ogni giro.
+  *(In questo progetto la funzione si chiama `nome-promemoria`, e `cron.sql`
+  punta lì.)*
 - Cancella il codice di esempio e incolla tutto il contenuto di
   **`supabase/functions/promemoria/completo.ts`**
 - Se compare l'opzione **Verify JWT** (o "Enforce JWT verification"),
@@ -94,7 +98,7 @@ Nel pannello della funzione c'è un riquadro per invocarla. In alternativa, da
 un computer:
 
 ```
-curl -X POST "https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/promemoria?prova=1" \
+curl -X POST "https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/nome-promemoria?prova=1" \
   -H "x-aegis-segreto: IL_TUO_SEGRETO"
 ```
 
@@ -156,6 +160,7 @@ Se la notifica arriva con i pulsanti *Fatto* e *Saltato*, la Fase 4 è finita.
 | La prova dice `personeConsiderate: 0` | Il telefono non è registrato: rifai il Passo 6 |
 | La prova dice `notificheDovute: 0` sempre | Controlla di avere un evento nell'orario giusto, e il fuso orario nel profilo |
 | La funzione risponde `401` | Il segreto non coincide tra Passo 3 e Passo 5 |
+| La funzione risponde `404` | Il nome nel `cron.sql` non coincide con quello reale della funzione |
 | `cron.job_run_details` mostra errori | La chiamata non parte: controlla l'indirizzo dentro `cron.sql` |
 | La sveglia gira ma non arriva nulla | Guarda i registri della funzione nel pannello: `fallite` maggiore di zero indica cosa ha risposto il servizio push |
 | Le notifiche arrivano in ritardo | Android in risparmio energetico: Impostazioni → Batteria → Aegis → Senza restrizioni |

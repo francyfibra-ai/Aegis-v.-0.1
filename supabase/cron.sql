@@ -10,6 +10,13 @@
 --  GitHub. Nel progetto resta la versione con il segnaposto.
 -- ==================================================================
 
+-- ⚠️ IL NOME DELLA FUNZIONE
+-- Deve coincidere ESATTAMENTE con quello che compare nel pannello
+-- Supabase, sezione Edge Functions. Se non coincide, la sveglia
+-- chiama un indirizzo inesistente e riceve 404 a ogni giro, senza
+-- che nulla lo segnali nell'app.
+-- Qui e' impostato su 'nome-promemoria', il nome effettivamente usato.
+
 -- Due estensioni di PostgreSQL:
 --   pg_cron  sa eseguire qualcosa a orari stabiliti
 --   pg_net   sa fare richieste web dall'interno del database
@@ -27,7 +34,7 @@ select cron.schedule(
   '* * * * *',
   $$
     select net.http_post(
-      url := 'https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/promemoria',
+      url := 'https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/nome-promemoria',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
         'x-aegis-segreto', 'IL_TUO_SEGRETO'
