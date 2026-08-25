@@ -91,6 +91,58 @@ condivide.**
 
 ---
 
+## ⚠️ Impostazione da correggere: dove tornare dopo le mail
+
+Supabase esce di fabbrica con l'indirizzo di ritorno impostato su
+`http://localhost:3000`, che e' un indirizzo di sviluppo esistente solo sul
+computer di chi programma. Sul telefono da' **"Impossibile raggiungere il
+sito - ERR_CONNECTION_REFUSED"**.
+
+Riguarda ogni link inviato per posta: conferma dell'indirizzo, recupero
+password e, in futuro, l'accesso con Google.
+
+> La conferma dell'indirizzo **avviene comunque**: Supabase verifica il link
+> prima di reindirizzare. La pagina d'errore arriva dopo, sul rimbalzo finale.
+> Se ti e' successo, prova semplicemente a entrare: probabilmente sei gia'
+> confermato.
+
+### Come si corregge
+
+Pannello Supabase → **Authentication** → **URL Configuration**
+
+| Campo | Valore |
+|---|---|
+| **Site URL** | `https://francyfibra-ai.github.io/Aegis-v.-0.1/` |
+| **Redirect URLs** | `https://francyfibra-ai.github.io/Aegis-v.-0.1/**` |
+
+I due asterischi finali servono: autorizzano il ritorno su qualunque pagina
+dentro l'app, non solo sulla prima.
+
+Poi **Save**.
+
+---
+
+## Consigliato: togliere la conferma via email
+
+Per un'app personale quella conferma non protegge nulla - l'indirizzo e' tuo e
+lo stai scrivendo tu - mentre dipende da un servizio di posta che Supabase
+stessa dichiara adatto solo alle prove (poche mail all'ora, e quasi sempre
+finiscono nello spam).
+
+**Authentication** → **Sign In / Providers** → **Email** → togli la spunta a
+**Confirm email** → **Save**
+
+Da quel momento, chi crea l'accesso entra subito.
+
+**E' sicuro?** Si'. Senza conferma un estraneo potrebbe crearsi un'utenza, ma
+vedrebbe soltanto il *proprio* archivio vuoto: le regole del database gli
+impediscono di leggere una sola riga altrui.
+
+Quando la tua utenza esiste ed entri regolarmente, puoi chiudere del tutto la
+porta: nella stessa sezione, spegni **Allow new users to sign up**.
+
+---
+
 ## Cosa succede dopo
 
 Quando mi mandi i due valori:
