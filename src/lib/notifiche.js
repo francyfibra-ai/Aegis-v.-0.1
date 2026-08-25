@@ -9,6 +9,21 @@
   che arrivano da un server anche ad app chiusa.
 */
 
+/*
+  DOVE VIVE L'APP
+  ------------------------------------------------------------------
+  Online l'app sta dentro una sottocartella ("/Aegis-v.-0.1/"), in locale
+  sta alla radice ("/"). Vite ci mette a disposizione questo valore gia'
+  pronto: usandolo, gli indirizzi qui sotto sono giusti in tutti e due
+  i casi, senza doverli riscrivere quando cambiamo hosting.
+*/
+const BASE = import.meta.env.BASE_URL
+
+/** L'indirizzo di un'icona, valido sia in locale sia online. */
+function icona(nome) {
+  return BASE + nome
+}
+
 /**
  * Registra il service worker (il file public/sw.js).
  * Va chiamata una volta sola all'avvio dell'app.
@@ -22,7 +37,12 @@ export async function registraServiceWorker() {
   }
 
   try {
-    const registrazione = await navigator.serviceWorker.register('/sw.js')
+    // Lo "scope" dice quale parte del sito il service worker controlla:
+    // deve essere la cartella dell'app, non tutto il dominio (su
+    // github.io il dominio e' condiviso con altri progetti).
+    const registrazione = await navigator.serviceWorker.register(BASE + 'sw.js', {
+      scope: BASE,
+    })
     console.log('[aegis] service worker registrato')
     return registrazione
   } catch (errore) {
@@ -73,8 +93,8 @@ export async function notificaDiProva() {
 
   await registrazione.showNotification('Aegis - prova', {
     body: 'Se leggi questo, le notifiche funzionano.',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: icona('icon-192.png'),
+    badge: icona('icon-192.png'),
     vibrate: [100, 50, 100],
     tag: 'aegis-prova',
     requireInteraction: true,

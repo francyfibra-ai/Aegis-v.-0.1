@@ -14,9 +14,18 @@
   cosi' viene pubblicato tale e quale all'indirizzo /sw.js
 */
 
+/*
+  DOVE VIVE L'APP
+  Online l'app sta in una sottocartella ("/Aegis-v.-0.1/"), in locale alla
+  radice ("/"). Questo file non passa da Vite, quindi il percorso non puo'
+  essergli scritto dentro: se lo ricava da solo, guardando dove si trova.
+  Cosi' funziona in tutti e due i casi senza modifiche.
+*/
+const BASE = new URL('./', self.location).pathname
+
 // Cambia questo numero ogni volta che modifichi il file:
 // serve ad Android per accorgersi che c'e' una versione nuova.
-const VERSIONE = 'aegis-sw-v2'
+const VERSIONE = 'aegis-sw-v3'
 
 // --- 1. Installazione -------------------------------------------------
 // Viene eseguita la prima volta che il service worker viene registrato.
@@ -65,8 +74,8 @@ self.addEventListener('push', (event) => {
 
   const opzioni = {
     body: dati.testo || '',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: BASE + 'icon-192.png',
+    badge: BASE + 'icon-192.png',
     // vibrate: fa vibrare il telefono (pausa/vibrazione in millisecondi)
     vibrate: [100, 50, 100],
     // tag: notifiche con lo stesso tag si sostituiscono invece di accumularsi
@@ -109,7 +118,7 @@ self.addEventListener('notificationclick', (event) => {
 
       if (dati.eventoId) parametri.set('evento', dati.eventoId)
 
-      const url = '/' + (parametri.toString() ? '?' + parametri.toString() : '')
+      const url = BASE + (parametri.toString() ? '?' + parametri.toString() : '')
 
       // Se l'app e' gia' aperta la portiamo in primo piano,
       // altrimenti apriamo una nuova finestra.

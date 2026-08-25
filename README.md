@@ -59,6 +59,20 @@ Aegis/
 
 ---
 
+## L'app online
+
+**<https://francyfibra-ai.github.io/Aegis-v.-0.1/>**
+
+Si pubblica da sola a ogni modifica del codice, tramite GitHub Pages. La prima
+accensione è descritta in [docs/02-pubblicare-app.md](docs/02-pubblicare-app.md).
+
+> L'app vive in una **sottocartella** dell'indirizzo (`/Aegis-v.-0.1/`), non
+> alla radice. È il motivo per cui in `vite.config.js` c'è la voce
+> `CARTELLA_ONLINE`: se un domani spostiamo l'app su un dominio suo, è l'unica
+> riga da cambiare.
+
+---
+
 ## Comandi (da eseguire nella cartella del progetto)
 
 | Comando           | Cosa fa                                                        |
@@ -90,7 +104,7 @@ bisogna pubblicare l'app online — è quello che facciamo nella Fase 1.
 | # | Fase                          | Stato     |
 |---|-------------------------------|-----------|
 | 1 | Setup del progetto            | fatta     |
-| 2 | Schermata piano settimanale   | in corso  |
+| 2 | Schermata piano settimanale   | fatta     |
 |   | └ controllo peso + grafico    | fatta     |
 | 3 | Salvataggio dati (database)   | da fare   |
 | 4 | Notifiche push                | da fare   |

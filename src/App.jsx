@@ -55,9 +55,12 @@ export default function App() {
       if (vista === 'peso' && parametri.get('registra')) setApriEditorPeso(true)
     }
 
-    // Ripulisce l'indirizzo, cosi' ricaricando non si ripete tutto
+    // Ripulisce l'indirizzo, cosi' ricaricando non si ripete tutto.
+    // BASE_URL e' la cartella in cui vive l'app: '/' in locale,
+    // '/Aegis-v.-0.1/' online. Scrivere '/' fisso qui butterebbe fuori
+    // dall'app una volta pubblicata.
     if ([...parametri.keys()].length > 0) {
-      window.history.replaceState({}, '', '/')
+      window.history.replaceState({}, '', import.meta.env.BASE_URL)
     }
 
     return () => {

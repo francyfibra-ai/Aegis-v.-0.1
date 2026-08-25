@@ -14,7 +14,7 @@ export const FASI = [
   {
     numero: 2,
     titolo: 'Schermata piano settimanale',
-    stato: 'in-corso',
+    stato: 'fatto',
     descrizione:
       'Inserire e modificare allenamenti, pasti e controllo peso, giorno per giorno, con il grafico dell\'andamento.',
   },

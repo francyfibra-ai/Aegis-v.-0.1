@@ -1,0 +1,71 @@
+# ------------------------------------------------------------------
+#  PUBBLICAZIONE AUTOMATICA DI AEGIS SU GITHUB PAGES
+# ------------------------------------------------------------------
+#  Cosa fa: ogni volta che il codice cambia, GitHub prende il progetto,
+#  lo compila e lo mette online. Non serve fare niente a mano.
+#
+#  Serve attivarlo UNA VOLTA SOLA dalle impostazioni della repository:
+#  vedi docs/02-pubblicare-app.md
+# ------------------------------------------------------------------
+
+name: Pubblica Aegis
+
+on:
+  # A ogni modifica salvata sul ramo principale
+  push:
+    branches:
+      - claude/aegis-routine-salutare-yrs0yc
+      - main
+  # E anche a mano, dalla scheda "Actions" di GitHub, quando serve
+  workflow_dispatch:
+
+# I permessi minimi necessari per pubblicare
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Se parte una nuova pubblicazione mentre la precedente e' ancora in corso,
+# quella vecchia viene annullata: online va sempre la versione piu' recente.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  # --- 1. Compila l'app -------------------------------------------
+  compila:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v4
+
+      - name: Prepara Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Installa le librerie
+        # "npm ci" installa le versioni esatte indicate in package-lock.json:
+        # cosi' la versione online e' identica a quella provata in locale.
+        run: npm ci
+
+      - name: Compila
+        run: npm run build
+
+      - name: Prepara i file per la pubblicazione
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  # --- 2. Mette online il risultato -------------------------------
+  pubblica:
+    needs: compila
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.messa-online.outputs.page_url }}
+    steps:
+      - name: Metti online
+        id: messa-online
+        uses: actions/deploy-pages@v4
