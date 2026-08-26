@@ -12,13 +12,27 @@
   salvando sul telefono. L'accesso serve a portare i dati online,
   non a darti il permesso di usare Aegis.
 */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { registrati, accedi, esci, reimpostaPassword } from '../lib/supabase.js'
 import { supabaseConfigurato } from '../lib/configurazione.js'
+import { salvaPreferenza } from '../lib/archivio.js'
+import { usaPreferenze } from '../lib/hooks.js'
 
 export default function SchedaAccount({ utente }) {
   // 'entra' | 'registrati' | 'passwordDimenticata'
   const [modo, setModo] = useState('entra')
+
+  // Il nome salvato nel profilo. E' quello che legge il programma delle
+  // notifiche: cambiarlo qui cambia come ti chiamano i promemoria.
+  const { preferenze } = usaPreferenze()
+  const [nomeProfilo, setNomeProfilo] = useState('')
+  const [nomeSalvato, setNomeSalvato] = useState(false)
+  const [salvandoNome, setSalvandoNome] = useState(false)
+
+  // Quando il profilo arriva dall'archivio, riempiamo il campo.
+  useEffect(() => {
+    if (preferenze.nome !== undefined) setNomeProfilo(preferenze.nome || '')
+  }, [preferenze.nome])
 
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
@@ -44,19 +58,69 @@ export default function SchedaAccount({ utente }) {
 
   /* --- Caso 3: sei collegato --- */
   if (utente) {
-    const nomeMostrato = utente.user_metadata?.nome || utente.email
+    // Il nome del profilo ha la precedenza su quello scritto in fase di
+    // registrazione: e' quello modificabile, ed e' quello che usano le notifiche.
+    const nomeMostrato = preferenze.nome || utente.user_metadata?.nome || utente.email
+
+    async function salvaNome(e) {
+      e.preventDefault()
+      setSalvandoNome(true)
+      setErrore('')
+      setNomeSalvato(false)
+      try {
+        await salvaPreferenza('nome', nomeProfilo.trim())
+        setNomeSalvato(true)
+      } catch (problema) {
+        setErrore(problema.message)
+      } finally {
+        setSalvandoNome(false)
+      }
+    }
 
     return (
       <section className="scheda">
         <h3>Il tuo accesso</h3>
         <p className="nota">
           Collegato come <strong>{nomeMostrato}</strong>
-          {utente.user_metadata?.nome && <> ({utente.email})</>}
+          {preferenze.nome && <> ({utente.email})</>}
         </p>
         <p className="nota">
           I dati sono nel tuo archivio online: li ritrovi su qualsiasi
           dispositivo entrando con questa email.
         </p>
+
+        {/* --- Nome usato dalle notifiche --- */}
+        <form onSubmit={salvaNome}>
+          <label className="etichetta" htmlFor="campo-nome-profilo">
+            Come vuoi essere chiamato
+          </label>
+          <input
+            id="campo-nome-profilo"
+            className="campo"
+            type="text"
+            value={nomeProfilo}
+            onChange={(e) => {
+              setNomeProfilo(e.target.value)
+              setNomeSalvato(false)
+            }}
+            placeholder="Es. Francesco"
+            maxLength={40}
+            autoComplete="given-name"
+          />
+          <p className="nota">
+            Compare nei promemoria: «{nomeProfilo.trim() || '…'}, sono le 19:00».
+            Lascialo vuoto per notifiche senza nome.
+          </p>
+          <div className="pulsantiera">
+            <button
+              type="submit"
+              className="pulsante"
+              disabled={salvandoNome || nomeProfilo.trim() === (preferenze.nome || '').trim()}
+            >
+              {salvandoNome ? 'Salvo…' : nomeSalvato ? 'Salvato ✓' : 'Salva il nome'}
+            </button>
+          </div>
+        </form>
         <div className="pulsantiera">
           <button
             className="pulsante"
