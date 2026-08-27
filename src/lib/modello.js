@@ -202,6 +202,37 @@ export function formattaVariazione(kg) {
   return segno + formattaPeso(Math.abs(arrotondato))
 }
 
+/** Genera un identificativo unico per una risposta. */
+export function nuovoIdRisposta() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return 'rsp_' + crypto.randomUUID()
+  }
+  return 'rsp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+}
+
+/**
+ * LA FORMA DI UNA RISPOSTA
+ * -----------------------
+ * {
+ *   id:     'rsp_abc123'
+ *   evento: 'evt_...'      a quale evento del piano si riferisce
+ *   titolo: 'Petto e tricipiti'   copia del titolo al momento della risposta,
+ *                                 cosi' lo storico resta leggibile anche se
+ *                                 in futuro rinomini o elimini l'evento
+ *   data:   '2026-08-25'   il giorno a cui si riferisce
+ *   stato:  'fatto'        oppure 'saltato'
+ * }
+ */
+export const STATI_RISPOSTA = [
+  { id: 'fatto', nome: 'Fatto', emoji: '✓', colore: '#0ca30c' },
+  { id: 'saltato', nome: 'Saltato', emoji: '×', colore: '#8fa3b5' },
+]
+
+/** Le informazioni di uno stato a partire dal suo identificativo. */
+export function statoRisposta(id) {
+  return STATI_RISPOSTA.find((s) => s.id === id) || null
+}
+
 /**
  * Controlla che una misurazione sia sensata.
  * @returns {string|null} messaggio d'errore, oppure null se va bene

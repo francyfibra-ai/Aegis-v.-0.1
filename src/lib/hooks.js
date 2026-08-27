@@ -20,6 +20,8 @@ import {
   iscrivitiMisurazioni,
   leggiPreferenze,
   iscrivitiPreferenze,
+  leggiRisposte,
+  iscrivitiRisposte,
 } from './archivio.js'
 
 /**
@@ -64,6 +66,7 @@ function creaHook(leggi, iscrivitiA, valoreIniziale) {
 const hookEventi = creaHook(leggiEventi, iscriviti, [])
 const hookMisurazioni = creaHook(leggiMisurazioni, iscrivitiMisurazioni, [])
 const hookPreferenze = creaHook(leggiPreferenze, iscrivitiPreferenze, {})
+const hookRisposte = creaHook(leggiRisposte, iscrivitiRisposte, [])
 
 /** Gli eventi del piano settimanale. */
 export function usaEventi() {
@@ -75,6 +78,12 @@ export function usaEventi() {
 export function usaMisurazioni() {
   const { dati, caricamento } = hookMisurazioni()
   return { misurazioni: dati, caricamento }
+}
+
+/** Lo storico delle risposte "fatto / saltato". */
+export function usaRisposte() {
+  const { dati, caricamento } = hookRisposte()
+  return { risposte: dati, caricamento }
 }
 
 /** Le impostazioni (per ora solo l'obiettivo di peso). */

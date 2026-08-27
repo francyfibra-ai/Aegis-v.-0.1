@@ -33,8 +33,8 @@ export const FASI = [
   {
     numero: 5,
     titolo: 'Conferma Fatto / Saltato',
-    stato: 'in-corso',
+    stato: 'fatto',
     descrizione:
-      'Rispondere dalla notifica e costruire lo storico nel tempo. Per il peso, inserire i chili.',
+      'La notifica ricorda, la risposta si dà nell\'app: si costruisce lo storico giorno per giorno.',
   },
 ]

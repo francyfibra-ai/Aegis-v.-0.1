@@ -703,3 +703,75 @@ code {
   padding: 2px 7px;
   word-break: break-all;
 }
+
+/* ==================================================================
+   FASE 5 - Rispondere "fatto / saltato" dall'app
+   ================================================================== */
+
+/* Quanti eventi di oggi sono stati completati */
+.conteggio-oggi {
+  margin-left: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .4px;
+  color: var(--testo-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+/* I due pulsanti sotto ogni evento di oggi */
+.controlli-risposta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 12px 57px; /* allineati al testo dell'evento, non all'orario */
+}
+
+.risposta-pulsante {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid var(--bordo);
+  background: #101a24;
+  color: var(--testo-tenue);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Lo stato scelto e' pieno, non solo bordato: si distingue con
+   un'occhiata sola scorrendo la giornata. */
+.risposta-pulsante.fatto.scelto {
+  background: #0ca30c;
+  border-color: #0ca30c;
+  color: #04121f;
+}
+
+.risposta-pulsante.saltato.scelto {
+  background: #43535f;
+  border-color: #43535f;
+  color: var(--testo);
+}
+
+.risposta-pulsante.peso {
+  border-color: rgba(217, 89, 38, .5);
+  color: #f08050;
+}
+
+.annulla-suggerimento { font-size: 11.5px; }
+
+/* L'evento a cui si e' risposto: il titolo si smorza, come una voce
+   spuntata su una lista della spesa. */
+.evento.con-risposta .testo-evento strong { opacity: .55; }
+.evento.stato-fatto .orario { color: #3ecf8e; }
+
+/* L'evento su cui si arriva dalla notifica */
+.in-evidenza .evento {
+  background: rgba(78, 163, 255, .08);
+  border-radius: 8px;
+}
+
+@media (max-width: 380px) {
+  .controlli-risposta { padding-left: 0; }
+}

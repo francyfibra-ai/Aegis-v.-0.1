@@ -107,10 +107,26 @@ bisogna pubblicare l'app online — è quello che facciamo nella Fase 1.
 | 2 | Schermata piano settimanale   | fatta     |
 |   | └ controllo peso + grafico    | fatta     |
 | 3 | Salvataggio dati (database)   | fatta     |
-| 4 | Notifiche push                | da fare   |
-| 5 | Conferma Fatto / Saltato      | da fare   |
+| 4 | Notifiche push                | fatta     |
+| 5 | Conferma Fatto / Saltato      | fatta     |
 
 L'elenco è anche dentro l'app: `src/lib/fasi.js`.
+
+---
+
+## Come si risponde a un promemoria
+
+**La notifica ricorda soltanto: non ha pulsanti.** Si risponde nell'app, dagli
+eventi di oggi nella schermata *Piano*, con **Fatto** o **Saltato**. Toccando di
+nuovo lo stesso pulsante la risposta si annulla.
+
+> **Perché non si risponde dalla notifica.** All'inizio i pulsanti c'erano.
+> Sono stati tolti dopo una verifica sul dispositivo: erano dichiarati
+> correttamente e Android confermava di averli mostrati nell'ordine giusto, ma
+> riferiva il pulsante sbagliato — premendo *Fatto* arrivava *saltato*.
+>
+> Su uno storico che serve a capire come sei andato nel tempo, un dato falso è
+> peggio di un dato mancante: il vuoto si nota, la risposta sbagliata no.
 
 ---
 

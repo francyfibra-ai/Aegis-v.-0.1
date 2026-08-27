@@ -25,7 +25,7 @@ const BASE = new URL('./', self.location).pathname
 
 // Cambia questo numero ogni volta che modifichi il file:
 // serve ad Android per accorgersi che c'e' una versione nuova.
-const VERSIONE = 'aegis-sw-v5'
+const VERSIONE = 'aegis-sw-v6'
 
 // --- 1. Installazione -------------------------------------------------
 // Viene eseguita la prima volta che il service worker viene registrato.
@@ -59,18 +59,20 @@ self.addEventListener('push', (event) => {
 
   const titolo = dati.titolo || 'Aegis'
 
-  // I pulsanti cambiano a seconda del tipo di evento:
-  //  - allenamento e pasto -> si risponde "Fatto" o "Saltato"
-  //  - peso                -> serve scrivere un numero, e Android NON permette
-  //    di scrivere dentro una notifica: quindi un solo pulsante, che apre
-  //    l'app gia' sul campo giusto.
-  const azioni =
-    dati.tipo === 'peso'
-      ? [{ action: 'registra-peso', title: 'Registra peso' }]
-      : [
-          { action: 'fatto', title: 'Fatto' },
-          { action: 'saltato', title: 'Saltato' },
-        ]
+  /*
+    LA NOTIFICA NON CHIEDE NULLA: RICORDA E BASTA.
+
+    Prima aveva i pulsanti "Fatto" e "Saltato". Sono stati tolti dopo
+    una verifica sul dispositivo: i pulsanti erano dichiarati
+    correttamente e Android confermava di averli mostrati nell'ordine
+    giusto, ma riferiva il pulsante sbagliato - premendo "Fatto"
+    arrivava "saltato".
+
+    Su uno storico che serve a capire come sei andato nel tempo, un
+    dato falso e' peggio di un dato mancante: il vuoto si nota, la
+    risposta sbagliata no. Quindi la risposta si da' nell'app, dove
+    nessuno puo' fraintenderla, e la notifica fa solo il suo mestiere.
+  */
 
   const opzioni = {
     body: dati.testo || '',
@@ -84,8 +86,7 @@ self.addEventListener('push', (event) => {
     requireInteraction: true,
     // data: informazioni che ci ritroviamo quando l'utente tocca la notifica
     data: dati,
-    // actions: i pulsanti sotto la notifica (vedi sopra)
-    actions: azioni,
+    // Nessun pulsante: si risponde nell'app (vedi sopra)
   }
 
   // waitUntil dice ad Android: "non spegnermi finche' non ho finito"
@@ -94,55 +95,31 @@ self.addEventListener('push', (event) => {
 
 // --- 4. Tocco sulla notifica o su un pulsante -------------------------
 self.addEventListener('notificationclick', (event) => {
-  const azione = event.action // 'fatto', 'saltato', oppure '' se ha toccato il corpo
   const dati = event.notification.data || {}
-
-  /*
-    DIAGNOSTICA TEMPORANEA
-    Premendo "Fatto" l'app ha riportato "saltato", e rileggendo il codice
-    non si trova l'errore. Raccogliamo quindi cio' che Android dichiara
-    davvero: quali pulsanti dice di aver mostrato, in che ordine, e quale
-    dice che e' stato premuto. Da rimuovere quando il caso e' chiarito.
-  */
-  const pulsantiMostrati = (event.notification.actions || [])
-    .map((a) => a.action + ':' + a.title)
-    .join('|')
-
-  const diagnostica = {
-    versioneSw: VERSIONE,
-    pulsantiMostrati,
-    azioneRicevuta: azione === '' ? '(corpo della notifica)' : azione,
-  }
 
   // Chiude la notifica appena toccata
   event.notification.close()
 
   event.waitUntil(
     (async () => {
-      // In Fase 5 qui invieremo la risposta al database.
-      // Per ora apriamo semplicemente l'app, passandole l'informazione
-      // tramite l'indirizzo (es. /?risposta=fatto&evento=abc123)
       const parametri = new URLSearchParams()
 
-      if (azione === 'registra-peso' || dati.tipo === 'peso') {
+      if (dati.tipo === 'peso') {
         // Il peso non e' "fatto/saltato": va scritto un numero.
-        // Portiamo l'utente sulla schermata Peso, con il campo gia' aperto.
+        // Portiamo direttamente sulla schermata Peso, campo gia' aperto.
         parametri.set('vista', 'peso')
         parametri.set('registra', '1')
-      } else if (azione) {
-        parametri.set('risposta', azione)
+      } else if (dati.eventoId) {
+        // Per gli altri, si apre il Piano con l'evento evidenziato:
+        // i pulsanti Fatto/Saltato sono li' accanto.
+        parametri.set('vista', 'piano')
+        parametri.set('evento', dati.eventoId)
       }
-
-      if (dati.eventoId) parametri.set('evento', dati.eventoId)
-
-      // Diagnostica temporanea, vedi sopra
-      parametri.set('sw', diagnostica.versioneSw)
-      parametri.set('pulsanti', diagnostica.pulsantiMostrati)
 
       const url = BASE + (parametri.toString() ? '?' + parametri.toString() : '')
 
-      // Se l'app e' gia' aperta la portiamo in primo piano,
-      // altrimenti apriamo una nuova finestra.
+      // Se l'app e' gia' aperta la portiamo in primo piano, altrimenti
+      // apriamo una nuova finestra.
       const finestre = await self.clients.matchAll({
         type: 'window',
         includeUncontrolled: true,
@@ -150,17 +127,7 @@ self.addEventListener('notificationclick', (event) => {
 
       for (const finestra of finestre) {
         if ('focus' in finestra) {
-          // Avvisa l'app gia' aperta di cosa e' stato premuto.
-          // "origine" serve a capire, in caso di risposta sbagliata, se
-          // il valore arriva da qui o dall'indirizzo: sono due percorsi
-          // diversi e si sbagliano in modi diversi.
-          finestra.postMessage({
-            tipo: 'risposta-notifica',
-            azione,
-            origine: 'messaggio',
-            diagnostica,
-            dati,
-          })
+          finestra.postMessage({ tipo: 'apri-evento', dati })
           return finestra.focus()
         }
       }

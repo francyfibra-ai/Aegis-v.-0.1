@@ -23,7 +23,7 @@
 import { supabase } from './supabase.js'
 
 // Le funzioni da richiamare quando i dati cambiano
-const ascoltatori = { eventi: new Set(), misurazioni: new Set(), preferenze: new Set() }
+const ascoltatori = { eventi: new Set(), misurazioni: new Set(), preferenze: new Set(), risposte: new Set() }
 
 function avvisa(quale, dati) {
   for (const ascoltatore of ascoltatori[quale]) {
@@ -97,6 +97,16 @@ function eventoDaRiga(riga) {
     tipo: riga.tipo,
     titolo: riga.titolo,
     orario: riga.orario,
+  }
+}
+
+function rispostaDaRiga(riga) {
+  return {
+    id: riga.id,
+    evento: riga.evento,
+    titolo: riga.titolo,
+    data: riga.data,
+    stato: riga.stato,
   }
 }
 
@@ -281,6 +291,80 @@ export const archivioRemoto = {
     const misurazioni = await this.leggiMisurazioni()
     avvisa('misurazioni', misurazioni)
     return misurazioni
+  },
+
+  /* --- Risposte "fatto / saltato" --- */
+  async leggiRisposte() {
+    const { data, error } = await supabase
+      .from('risposte')
+      .select('id, evento, titolo, data, stato')
+      .order('data', { ascending: false })
+
+    segnala(error, 'leggere lo storico')
+    return (data || []).map(rispostaDaRiga)
+  },
+
+  async salvaRisposta({ evento, titolo, data: giorno, stato }) {
+    const utente = await utenteCollegato()
+
+    // Il vincolo di unicita' su (utente, evento, data) fa si' che
+    // rispondere di nuovo corregga la risposta invece di aggiungerne
+    // una seconda: e' il database a garantirlo, non questo codice.
+    const { data, error } = await supabase
+      .from('risposte')
+      .upsert(
+        { utente, evento, titolo, data: giorno, stato, registrato_il: new Date().toISOString() },
+        { onConflict: 'utente,evento,data' }
+      )
+      .select()
+      .single()
+
+    segnala(error, 'registrare la risposta')
+    await this.notificaRisposte()
+    return rispostaDaRiga(data)
+  },
+
+  async eliminaRisposta({ evento, data: giorno }) {
+    const { error } = await supabase
+      .from('risposte')
+      .delete()
+      .eq('evento', evento)
+      .eq('data', giorno)
+
+    segnala(error, 'togliere la risposta')
+    await this.notificaRisposte()
+  },
+
+  async sostituisciRisposte(risposte) {
+    const utente = await utenteCollegato()
+
+    const { error: erroreSvuota } = await supabase.from('risposte').delete().eq('utente', utente)
+    segnala(erroreSvuota, 'svuotare lo storico')
+
+    if (risposte.length > 0) {
+      const righe = risposte.map((r) => ({
+        utente,
+        evento: r.evento,
+        titolo: r.titolo || '',
+        data: r.data,
+        stato: r.stato,
+      }))
+      const { error } = await supabase.from('risposte').insert(righe)
+      segnala(error, 'salvare lo storico')
+    }
+
+    return this.notificaRisposte()
+  },
+
+  iscrivitiRisposte(callback) {
+    ascoltatori.risposte.add(callback)
+    return () => ascoltatori.risposte.delete(callback)
+  },
+
+  async notificaRisposte() {
+    const risposte = await this.leggiRisposte()
+    avvisa('risposte', risposte)
+    return risposte
   },
 
   /* --- Preferenze (la riga del profilo) --- */

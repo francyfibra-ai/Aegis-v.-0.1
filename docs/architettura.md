@@ -67,9 +67,18 @@ secondo, fa il suo controllo, si rispegne. Nel piano gratuito questo costa 0€.
 
 **Quando rispondi (Fase 5)**
 
-6. Premi "Fatto" (o "Saltato") direttamente dalla notifica
-7. Il service worker registra la risposta nel database, con data e ora
+6. Tocchi la notifica: l'app si apre sull'evento
+7. Premi **Fatto** o **Saltato** nell'app, e la risposta finisce nel database
+   con la data
 8. Nel tempo si costruisce lo storico — la base per le analisi della v0.2
+
+> **La notifica non ha pulsanti, ed è una scelta.** All'inizio li aveva.
+> Verificando sul dispositivo è emerso che Android riferiva il pulsante
+> sbagliato: premendo *Fatto* arrivava *saltato*, pur essendo i pulsanti
+> dichiarati e mostrati nell'ordine giusto.
+>
+> Si perde un tocco. Si guadagna che il dato registrato sia quello vero — e su
+> uno storico da rileggere fra mesi, un dato falso è peggio di uno mancante.
 
 ---
 

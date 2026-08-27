@@ -12,25 +12,38 @@ import {
   ordinaPerOrario,
   giornoDiOggi,
   pianoDiEsempio,
+  dataInTesto,
+  statoRisposta,
 } from '../lib/modello.js'
 import {
   creaEvento,
   aggiornaEvento,
   eliminaEvento,
   sostituisciTutto,
+  salvaRisposta,
+  eliminaRisposta,
   infoArchivio,
 } from '../lib/archivio.js'
-import { usaEventi } from '../lib/hooks.js'
+import { usaEventi, usaRisposte } from '../lib/hooks.js'
 import { iscrittoAllePush } from '../lib/push.js'
 import EditorEvento from './EditorEvento.jsx'
 
-export default function PaginaPiano() {
+export default function PaginaPiano({ vaiAlPeso, eventoDaNotifica }) {
   const { eventi, caricamento } = usaEventi()
+  const { risposte } = usaRisposte()
 
   // Quando questo valore non e' null, il pannello di modifica e' aperto.
   // Contiene { evento } se stiamo modificando, { giorno } se stiamo creando.
   const [editor, setEditor] = useState(null)
   const [errore, setErrore] = useState('')
+
+  // L'evento su cui siamo arrivati dalla notifica: lo portiamo a schermo
+  // e lo mettiamo in evidenza, cosi' non devi cercarlo nell'elenco.
+  useEffect(() => {
+    if (!eventoDaNotifica) return
+    const elemento = document.getElementById('evento-' + eventoDaNotifica)
+    if (elemento) elemento.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [eventoDaNotifica, eventi])
 
   // I promemoria sono accesi su questo dispositivo? Se si', l'avviso
   // "gli orari non fanno suonare niente" non ha piu' ragione di esserci.
@@ -40,6 +53,40 @@ export default function PaginaPiano() {
   }, [])
 
   const oggi = giornoDiOggi()
+  const dataDiOggi = dataInTesto()
+
+  /*
+    Le risposte di oggi, messe in una mappa per ritrovarle in fretta.
+    La chiave e' l'identificativo dell'evento: per ogni evento c'e' al
+    massimo una risposta al giorno.
+  */
+  const risposteDiOggi = new Map(
+    risposte.filter((r) => r.data === dataDiOggi).map((r) => [r.evento, r])
+  )
+
+  /**
+   * Registra "fatto" o "saltato" per un evento di oggi.
+   * Premendo di nuovo lo stesso pulsante la risposta viene tolta:
+   * serve a correggersi senza dover cercare dove si annulla.
+   */
+  async function rispondi(evento, stato) {
+    try {
+      const gia = risposteDiOggi.get(evento.id)
+      if (gia && gia.stato === stato) {
+        await eliminaRisposta({ evento: evento.id, data: dataDiOggi })
+      } else {
+        await salvaRisposta({
+          evento: evento.id,
+          titolo: evento.titolo,
+          data: dataDiOggi,
+          stato,
+        })
+      }
+      setErrore('')
+    } catch (e) {
+      setErrore(e.message)
+    }
+  }
 
   async function gestisciSalvataggio(bozza) {
     try {
@@ -134,6 +181,12 @@ export default function PaginaPiano() {
               <h3>
                 {giorno.nome}
                 {eOggi && <span className="pillola">oggi</span>}
+                {eOggi && delGiorno.length > 0 && (
+                  <span className="conteggio-oggi">
+                    {delGiorno.filter((e) => risposteDiOggi.get(e.id)?.stato === 'fatto').length}
+                    /{delGiorno.length} fatti
+                  </span>
+                )}
               </h3>
               <button
                 className="pulsante-tondo"
@@ -151,10 +204,17 @@ export default function PaginaPiano() {
               <ul className="lista-eventi">
                 {delGiorno.map((evento) => {
                   const tipo = tipoEvento(evento.tipo)
+                  const risposta = eOggi ? risposteDiOggi.get(evento.id) : null
+                  const stato = risposta ? statoRisposta(risposta.stato) : null
+
                   return (
-                    <li key={evento.id}>
+                    <li
+                      key={evento.id}
+                      id={'evento-' + evento.id}
+                      className={eventoDaNotifica === evento.id ? 'in-evidenza' : undefined}
+                    >
                       <button
-                        className="evento"
+                        className={'evento' + (stato ? ' con-risposta stato-' + risposta.stato : '')}
                         onClick={() => setEditor({ evento })}
                       >
                         <span className="orario">{evento.orario}</span>
@@ -173,6 +233,49 @@ export default function PaginaPiano() {
                           ›
                         </span>
                       </button>
+
+                      {/* Si risponde solo per oggi: il piano e' ricorrente,
+                          e rispondere per lunedi' prossimo non vuol dire nulla. */}
+                      {eOggi && (
+                        <div className="controlli-risposta">
+                          {evento.tipo === 'peso' ? (
+                            <button
+                              className="risposta-pulsante peso"
+                              onClick={() => vaiAlPeso?.()}
+                            >
+                              ⚖️ Registra il peso
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                className={
+                                  'risposta-pulsante fatto' +
+                                  (risposta?.stato === 'fatto' ? ' scelto' : '')
+                                }
+                                onClick={() => rispondi(evento, 'fatto')}
+                                aria-pressed={risposta?.stato === 'fatto'}
+                              >
+                                ✓ Fatto
+                              </button>
+                              <button
+                                className={
+                                  'risposta-pulsante saltato' +
+                                  (risposta?.stato === 'saltato' ? ' scelto' : '')
+                                }
+                                onClick={() => rispondi(evento, 'saltato')}
+                                aria-pressed={risposta?.stato === 'saltato'}
+                              >
+                                × Saltato
+                              </button>
+                              {risposta && (
+                                <span className="nota annulla-suggerimento">
+                                  tocca di nuovo per annullare
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
                     </li>
                   )
                 })}

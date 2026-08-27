@@ -21,12 +21,6 @@ const VISTE = [
   { id: 'setup', nome: 'Setup', emoji: '⚙️' },
 ]
 
-/* Da dove e' arrivata la risposta: due percorsi diversi, due modi
-   diversi di sbagliarsi. */
-function rispotaOrigine(risposta) {
-  return risposta.origine === 'indirizzo' ? 'app riaperta' : 'app gia\' aperta'
-}
-
 export default function App() {
   // Quale schermata e' visibile: vedi VISTE qui sopra
   const [schermata, setSchermata] = useState('piano')
@@ -43,9 +37,8 @@ export default function App() {
   // "i dati sono solo sul telefono" a chi in realta' e' collegato.
   const [accessoVerificato, setAccessoVerificato] = useState(!supabaseConfigurato())
 
-  // Messaggio mostrato quando si risponde a una notifica.
-  // Dalla Fase 5 la risposta verra' salvata davvero nello storico.
-  const [rispostaNotifica, setRispostaNotifica] = useState(null)
+  // L'evento su cui aprire il Piano, arrivando da una notifica.
+  const [eventoDaNotifica, setEventoDaNotifica] = useState(null)
 
   // --- Accesso: leggiamo la situazione all'avvio e restiamo in ascolto ---
   useEffect(() => {
@@ -78,32 +71,27 @@ export default function App() {
   useEffect(() => {
     // Caso 1: l'app era gia' aperta e il service worker ci avvisa
     function ascoltaServiceWorker(evento) {
-      if (evento.data?.tipo === 'risposta-notifica') {
-        // Registriamo anche da dove arriva: serve a distinguere un
-        // errore nostro da un pulsante riportato male da Android.
-        setRispostaNotifica({
-          azione: evento.data.azione,
-          origine: evento.data.origine || 'messaggio',
-          diagnostica: evento.data.diagnostica,
-        })
+      // La notifica non chiede nulla: porta soltanto sul punto giusto
+      // dell'app, dove si risponde.
+      if (evento.data?.tipo === 'apri-evento') {
+        const dati = evento.data.dati || {}
+        if (dati.tipo === 'peso') {
+          setSchermata('peso')
+          setApriEditorPeso(true)
+        } else {
+          setSchermata('piano')
+          setEventoDaNotifica(dati.eventoId || null)
+        }
       }
     }
     navigator.serviceWorker?.addEventListener('message', ascoltaServiceWorker)
 
     // Caso 2: l'app e' stata APERTA dalla notifica; l'informazione
-    // arriva nell'indirizzo, es. /?risposta=fatto oppure /?vista=peso
+    // arriva nell'indirizzo, es. /?vista=piano&evento=abc123
     const parametri = new URLSearchParams(window.location.search)
 
-    if (parametri.get('risposta')) {
-      setRispostaNotifica({
-        azione: parametri.get('risposta'),
-        origine: 'indirizzo',
-        diagnostica: {
-          versioneSw: parametri.get('sw') || '(non riportata)',
-          pulsantiMostrati: parametri.get('pulsanti') || '(nessuno)',
-          azioneRicevuta: parametri.get('risposta'),
-        },
-      })
+    if (parametri.get('evento')) {
+      setEventoDaNotifica(parametri.get('evento'))
     }
 
     // La notifica del peso porta direttamente sulla schermata giusta,
@@ -137,58 +125,13 @@ export default function App() {
         </div>
       </header>
 
-      {rispostaNotifica && (
-        <div className="messaggio">
-          <p style={{ margin: 0 }}>
-            Android ha riportato il pulsante «<strong>{rispostaNotifica.azione}</strong>».
-          </p>
-
-          {/* Diagnostica temporanea: da togliere quando il caso del
-              pulsante che riporta l'azione sbagliata sara' chiarito. */}
-          {rispostaNotifica.diagnostica && (
-            <ul className="diagnostica-notifica">
-              <li>
-                <span>versione del programma di sfondo</span>
-                <code>{rispostaNotifica.diagnostica.versioneSw}</code>
-              </li>
-              <li>
-                <span>pulsanti che Android dice di aver mostrato</span>
-                <code>{rispostaNotifica.diagnostica.pulsantiMostrati}</code>
-              </li>
-              <li>
-                <span>azione ricevuta</span>
-                <code>{rispostaNotifica.diagnostica.azioneRicevuta}</code>
-              </li>
-              <li>
-                <span>percorso</span>
-                <code>{rispotaOrigine(rispostaNotifica)}</code>
-              </li>
-            </ul>
-          )}
-
-          <p className="nota" style={{ marginTop: 10 }}>
-            Manda queste quattro righe insieme al pulsante che hai premuto davvero.{' '}
-            <button className="pulsante-testo" onClick={() => setRispostaNotifica(null)}>
-              ok
-            </button>
-          </p>
-        </div>
-      )}
-
-      {/* Invito ad accedere: solo quando l'archivio online esiste,
-          sappiamo con certezza che non sei collegato, e non sei gia'
-          nella schermata dove si entra. */}
-      {supabaseConfigurato() && accessoVerificato && !utente && schermata !== 'setup' && (
-        <p className="messaggio tenue">
-          💾 I dati sono solo su questo telefono.{' '}
-          <button className="pulsante-testo" onClick={() => setSchermata('setup')}>
-            Accedi per conservarli online
-          </button>
-        </p>
-      )}
-
       <main>
-        {schermata === 'piano' && <PaginaPiano />}
+        {schermata === 'piano' && (
+          <PaginaPiano
+            eventoDaNotifica={eventoDaNotifica}
+            vaiAlPeso={() => setSchermata('peso')}
+          />
+        )}
         {schermata === 'peso' && <PaginaPeso apriSubitoEditor={apriEditorPeso} />}
         {schermata === 'setup' && <PaginaSetup utente={utente} />}
       </main>

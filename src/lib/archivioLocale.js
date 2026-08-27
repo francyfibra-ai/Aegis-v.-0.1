@@ -12,7 +12,7 @@
   che le schermate cambino di una riga.
 */
 
-import { nuovoId, nuovoIdMisurazione } from './modello.js'
+import { nuovoId, nuovoIdMisurazione, nuovoIdRisposta } from './modello.js'
 
 /* ------------------------------------------------------------------
    Il meccanismo comune ai tre elenchi salvati
@@ -89,6 +89,7 @@ function creaContenitore(chiaveMemoria, valoreIniziale) {
 const contenitoreEventi = creaContenitore('aegis.eventi.v1', [])
 const contenitoreMisurazioni = creaContenitore('aegis.misurazioni.v1', [])
 const contenitorePreferenze = creaContenitore('aegis.preferenze.v1', {})
+const contenitoreRisposte = creaContenitore('aegis.risposte.v1', [])
 
 /* ------------------------------------------------------------------
    Le funzioni usate dall'app
@@ -208,6 +209,51 @@ export const archivioLocale = {
 
   iscrivitiPreferenze(callback) {
     return contenitorePreferenze.iscriviti(callback)
+  },
+
+  /* --- Risposte "fatto / saltato" --- */
+  async leggiRisposte() {
+    return contenitoreRisposte.leggi()
+  },
+
+  /**
+   * Registra la risposta a un evento per un certo giorno.
+   * Una sola risposta per evento per giorno: rispondere di nuovo
+   * corregge la precedente invece di aggiungerne una seconda.
+   */
+  async salvaRisposta({ evento, titolo, data, stato }) {
+    const risposte = await contenitoreRisposte.leggi()
+
+    const esistente = risposte.find((r) => r.evento === evento && r.data === data)
+    let salvata
+    let elenco
+
+    if (esistente) {
+      salvata = { ...esistente, stato, titolo }
+      elenco = risposte.map((r) => (r === esistente ? salvata : r))
+    } else {
+      salvata = { id: nuovoIdRisposta(), evento, titolo, data, stato }
+      elenco = [...risposte, salvata]
+    }
+
+    await contenitoreRisposte.scrivi(elenco)
+    return salvata
+  },
+
+  /** Toglie la risposta: l'evento torna "in attesa". */
+  async eliminaRisposta({ evento, data }) {
+    const risposte = await contenitoreRisposte.leggi()
+    await contenitoreRisposte.scrivi(
+      risposte.filter((r) => !(r.evento === evento && r.data === data))
+    )
+  },
+
+  async sostituisciRisposte(risposte) {
+    return contenitoreRisposte.scrivi([...risposte])
+  },
+
+  iscrivitiRisposte(callback) {
+    return contenitoreRisposte.iscriviti(callback)
   },
 
   /** Dice se c'e' qualcosa salvato qui: serve a proporre il trasferimento online. */

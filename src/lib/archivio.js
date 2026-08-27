@@ -28,7 +28,7 @@ let attivo = archivioLocale
   modalita' cambia, non devono riagganciarsi a nulla: ci pensa questo
   file a ripuntare l'ascolto e a riavvisarle con i dati nuovi.
 */
-const ascoltatori = { eventi: new Set(), misurazioni: new Set(), preferenze: new Set() }
+const ascoltatori = { eventi: new Set(), misurazioni: new Set(), preferenze: new Set(), risposte: new Set() }
 
 // Le funzioni per disiscriversi dall'archivio attualmente in uso
 let disiscrizioni = []
@@ -40,6 +40,7 @@ function collegaAscolto() {
     attivo.iscrivitiEventi((dati) => propaga('eventi', dati)),
     attivo.iscrivitiMisurazioni((dati) => propaga('misurazioni', dati)),
     attivo.iscrivitiPreferenze((dati) => propaga('preferenze', dati)),
+    attivo.iscrivitiRisposte((dati) => propaga('risposte', dati)),
   ]
 }
 
@@ -77,6 +78,7 @@ export function impostaUtente(utente) {
   attivo.leggiEventi().then((d) => propaga('eventi', d)).catch(() => propaga('eventi', []))
   attivo.leggiMisurazioni().then((d) => propaga('misurazioni', d)).catch(() => propaga('misurazioni', []))
   attivo.leggiPreferenze().then((d) => propaga('preferenze', d)).catch(() => propaga('preferenze', {}))
+  attivo.leggiRisposte().then((d) => propaga('risposte', d)).catch(() => propaga('risposte', []))
 }
 
 /** Descrive dove stanno i dati adesso: lo mostriamo nell'app. */
@@ -159,6 +161,36 @@ export async function salvaPreferenza(chiave, valore) {
 export function iscrivitiPreferenze(callback) {
   ascoltatori.preferenze.add(callback)
   return () => ascoltatori.preferenze.delete(callback)
+}
+
+/* ==================================================================
+   Risposte "fatto / saltato"
+   ================================================================== */
+
+export async function leggiRisposte() {
+  return attivo.leggiRisposte()
+}
+
+/**
+ * Registra che un evento e' stato fatto o saltato in un certo giorno.
+ * @param {{evento:string, titolo:string, data:string, stato:'fatto'|'saltato'}} dati
+ */
+export async function salvaRisposta(dati) {
+  return attivo.salvaRisposta(dati)
+}
+
+/** Toglie la risposta: l'evento torna "in attesa". */
+export async function eliminaRisposta(dati) {
+  return attivo.eliminaRisposta(dati)
+}
+
+export async function sostituisciRisposte(risposte) {
+  return attivo.sostituisciRisposte(risposte)
+}
+
+export function iscrivitiRisposte(callback) {
+  ascoltatori.risposte.add(callback)
+  return () => ascoltatori.risposte.delete(callback)
 }
 
 /* ==================================================================
