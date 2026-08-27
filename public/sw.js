@@ -25,7 +25,7 @@ const BASE = new URL('./', self.location).pathname
 
 // Cambia questo numero ogni volta che modifichi il file:
 // serve ad Android per accorgersi che c'e' una versione nuova.
-const VERSIONE = 'aegis-sw-v4'
+const VERSIONE = 'aegis-sw-v5'
 
 // --- 1. Installazione -------------------------------------------------
 // Viene eseguita la prima volta che il service worker viene registrato.
@@ -97,6 +97,23 @@ self.addEventListener('notificationclick', (event) => {
   const azione = event.action // 'fatto', 'saltato', oppure '' se ha toccato il corpo
   const dati = event.notification.data || {}
 
+  /*
+    DIAGNOSTICA TEMPORANEA
+    Premendo "Fatto" l'app ha riportato "saltato", e rileggendo il codice
+    non si trova l'errore. Raccogliamo quindi cio' che Android dichiara
+    davvero: quali pulsanti dice di aver mostrato, in che ordine, e quale
+    dice che e' stato premuto. Da rimuovere quando il caso e' chiarito.
+  */
+  const pulsantiMostrati = (event.notification.actions || [])
+    .map((a) => a.action + ':' + a.title)
+    .join('|')
+
+  const diagnostica = {
+    versioneSw: VERSIONE,
+    pulsantiMostrati,
+    azioneRicevuta: azione === '' ? '(corpo della notifica)' : azione,
+  }
+
   // Chiude la notifica appena toccata
   event.notification.close()
 
@@ -118,6 +135,10 @@ self.addEventListener('notificationclick', (event) => {
 
       if (dati.eventoId) parametri.set('evento', dati.eventoId)
 
+      // Diagnostica temporanea, vedi sopra
+      parametri.set('sw', diagnostica.versioneSw)
+      parametri.set('pulsanti', diagnostica.pulsantiMostrati)
+
       const url = BASE + (parametri.toString() ? '?' + parametri.toString() : '')
 
       // Se l'app e' gia' aperta la portiamo in primo piano,
@@ -137,6 +158,7 @@ self.addEventListener('notificationclick', (event) => {
             tipo: 'risposta-notifica',
             azione,
             origine: 'messaggio',
+            diagnostica,
             dati,
           })
           return finestra.focus()

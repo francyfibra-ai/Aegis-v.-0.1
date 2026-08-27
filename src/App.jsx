@@ -84,6 +84,7 @@ export default function App() {
         setRispostaNotifica({
           azione: evento.data.azione,
           origine: evento.data.origine || 'messaggio',
+          diagnostica: evento.data.diagnostica,
         })
       }
     }
@@ -94,7 +95,15 @@ export default function App() {
     const parametri = new URLSearchParams(window.location.search)
 
     if (parametri.get('risposta')) {
-      setRispostaNotifica({ azione: parametri.get('risposta'), origine: 'indirizzo' })
+      setRispostaNotifica({
+        azione: parametri.get('risposta'),
+        origine: 'indirizzo',
+        diagnostica: {
+          versioneSw: parametri.get('sw') || '(non riportata)',
+          pulsantiMostrati: parametri.get('pulsanti') || '(nessuno)',
+          azioneRicevuta: parametri.get('risposta'),
+        },
+      })
     }
 
     // La notifica del peso porta direttamente sulla schermata giusta,
@@ -129,19 +138,41 @@ export default function App() {
       </header>
 
       {rispostaNotifica && (
-        <p className="messaggio">
-          Android ha riportato il pulsante «<strong>{rispostaNotifica.azione}</strong>».
-          Dalla Fase 5 finirà nello storico.
-          <br />
-          <span className="nota">
-            Se non è il pulsante che hai premuto, dimmelo: significa che il
-            telefono riporta l'azione sbagliata, e va gestito prima di
-            registrare le risposte davvero. (origine: {rispotaOrigine(rispostaNotifica)})
-          </span>{' '}
-          <button className="pulsante-testo" onClick={() => setRispostaNotifica(null)}>
-            ok
-          </button>
-        </p>
+        <div className="messaggio">
+          <p style={{ margin: 0 }}>
+            Android ha riportato il pulsante «<strong>{rispostaNotifica.azione}</strong>».
+          </p>
+
+          {/* Diagnostica temporanea: da togliere quando il caso del
+              pulsante che riporta l'azione sbagliata sara' chiarito. */}
+          {rispostaNotifica.diagnostica && (
+            <ul className="diagnostica-notifica">
+              <li>
+                <span>versione del programma di sfondo</span>
+                <code>{rispostaNotifica.diagnostica.versioneSw}</code>
+              </li>
+              <li>
+                <span>pulsanti che Android dice di aver mostrato</span>
+                <code>{rispostaNotifica.diagnostica.pulsantiMostrati}</code>
+              </li>
+              <li>
+                <span>azione ricevuta</span>
+                <code>{rispostaNotifica.diagnostica.azioneRicevuta}</code>
+              </li>
+              <li>
+                <span>percorso</span>
+                <code>{rispotaOrigine(rispostaNotifica)}</code>
+              </li>
+            </ul>
+          )}
+
+          <p className="nota" style={{ marginTop: 10 }}>
+            Manda queste quattro righe insieme al pulsante che hai premuto davvero.{' '}
+            <button className="pulsante-testo" onClick={() => setRispostaNotifica(null)}>
+              ok
+            </button>
+          </p>
+        </div>
       )}
 
       {/* Invito ad accedere: solo quando l'archivio online esiste,
