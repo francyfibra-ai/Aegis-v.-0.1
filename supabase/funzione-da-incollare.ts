@@ -704,7 +704,10 @@ async function lavora(soloProva: boolean) {
       }
 
       // 4. Mandiamo a tutti i telefoni di quella persona
+      let consegnate = 0
+      let tentate = 0
       for (const iscrizione of iscrizioni.filter((i) => i.utente === utente)) {
+        tentate++
         const destinazione: Iscrizione = {
           endpoint: iscrizione.endpoint,
           chiavi: { p256dh: iscrizione.chiave_p256dh, auth: iscrizione.chiave_auth },
@@ -720,6 +723,7 @@ async function lavora(soloProva: boolean) {
           )
 
           if (esito.ok) {
+            consegnate++
             resoconto.inviate++
           } else if (esito.daRimuovere) {
             // Il telefono non esiste piu' per il servizio push:
@@ -734,6 +738,20 @@ async function lavora(soloProva: boolean) {
           resoconto.fallite++
           resoconto.dettagli.push({ errore: String(errore) })
         }
+      }
+
+      /*
+        Se nessun telefono l'ha ricevuta, togliamo la prenotazione:
+        al giro successivo la sveglia ci riprova, finche' resta dentro
+        la finestra di tolleranza. Senza questo, un singhiozzo della
+        rete al primo tentativo faceva perdere il promemoria per sempre,
+        perche' risultava "gia' inviato".
+      */
+      if (tentate > 0 && consegnate === 0) {
+        await interroga(
+          `invii?utente=eq.${utente}&evento=eq.${dovuto.evento.id}&data=eq.${dovuto.dataOccorrenza}`,
+          { method: 'DELETE' }
+        ).catch(() => {})
       }
     }
   }
