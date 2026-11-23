@@ -260,8 +260,12 @@ Deno.serve(async (richiesta) => {
   // Solo chi conosce il segreto puo' far girare la sveglia.
   // Il segreto viaggia in un'intestazione, non nell'indirizzo: gli
   // indirizzi finiscono nei registri dei server, le intestazioni no.
-  const segretoRicevuto = richiesta.headers.get('x-aegis-segreto')
-  if (segretoRicevuto !== SEGRETO) {
+  //
+  // Spazi e "a capo" ai bordi non contano: finiscono dentro quasi sempre
+  // per sbaglio, copiando il valore da un messaggio o da una nota, e
+  // farebbero sembrare sbagliato un segreto giusto.
+  const segretoRicevuto = richiesta.headers.get('x-aegis-segreto')?.trim()
+  if (segretoRicevuto !== SEGRETO.trim()) {
     return risposta(
       {
         errore: 'Segreto non corrispondente',
