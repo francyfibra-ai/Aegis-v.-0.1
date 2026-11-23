@@ -90,6 +90,14 @@ export async function attivaPromemoria() {
 
   // 2. L'iscrizione vera e propria
   let iscrizione = await registrazione.pushManager.getSubscription()
+
+  // Un'iscrizione fatta con una chiave vecchia non riceverebbe niente:
+  // la togliamo e la rifacciamo con quella attuale.
+  if (iscrizione && !fattaConChiaveAttuale(iscrizione)) {
+    await dimenticaIscrizione(iscrizione)
+    iscrizione = null
+  }
+
   if (!iscrizione) {
     try {
       iscrizione = await registrazione.pushManager.subscribe({
@@ -153,6 +161,64 @@ export async function disattivaPromemoria() {
   }
 
   return { ok: true }
+}
+
+/**
+ * L'iscrizione e' stata fatta con la chiave pubblica che l'app usa adesso?
+ *
+ * Ogni iscrizione resta legata alla chiave con cui e' nata. Se le chiavi
+ * vengono cambiate, la sveglia firma con quella nuova e il servizio push
+ * rifiuta i messaggi verso le iscrizioni vecchie.
+ */
+function fattaConChiaveAttuale(iscrizione) {
+  const chiave = iscrizione.options?.applicationServerKey
+  // Browser che non dicono con quale chiave e' nata: la diamo per buona,
+  // come prima di questo controllo.
+  if (!chiave) return true
+  return byteInTesto(chiave) === VAPID_CHIAVE_PUBBLICA
+}
+
+/** Toglie un'iscrizione dal telefono e dall'archivio online. */
+async function dimenticaIscrizione(iscrizione) {
+  const endpoint = iscrizione.endpoint
+  try {
+    await iscrizione.unsubscribe()
+  } catch (errore) {
+    console.warn('[push] non riesco a togliere l\'iscrizione vecchia:', errore)
+  }
+  if (supabase) {
+    const { error } = await supabase.from('iscrizioni_push').delete().eq('endpoint', endpoint)
+    if (error) console.warn('[push] non sono riuscito a cancellare la riga vecchia:', error)
+  }
+}
+
+/**
+ * Da chiamare all'avvio, dopo l'accesso.
+ *
+ * Se le chiavi delle notifiche sono state cambiate, rifa' l'iscrizione
+ * con quella nuova SENZA che tu debba passare dal Setup. Non chiede
+ * nessun permesso: agisce solo se le notifiche erano gia' attive e
+ * il permesso gia' concesso.
+ *
+ * @returns {Promise<boolean>} true se ha dovuto rifare l'iscrizione
+ */
+export async function riallineaIscrizione() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false
+    if (!supabase || Notification.permission !== 'granted') return false
+
+    const registrazione = await navigator.serviceWorker.ready
+    const iscrizione = await registrazione.pushManager.getSubscription()
+    if (!iscrizione || fattaConChiaveAttuale(iscrizione)) return false
+
+    console.info('[push] chiave cambiata: rifaccio l\'iscrizione')
+    const esito = await attivaPromemoria()
+    if (!esito.ok) console.warn('[push] riallineamento non riuscito:', esito.motivo)
+    return esito.ok
+  } catch (errore) {
+    console.warn('[push] riallineamento non riuscito:', errore)
+    return false
+  }
 }
 
 /** Un'etichetta leggibile per riconoscere il dispositivo nell'elenco. */

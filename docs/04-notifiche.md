@@ -225,3 +225,19 @@ qualche ritardo di qualche minuto.
 La finestra di tolleranza è di **10 minuti**: se la sveglia salta qualche giro,
 il promemoria delle 19:00 arriva comunque fino alle 19:10. Oltre, rinuncia —
 un promemoria del pranzo recapitato a metà pomeriggio è solo fastidio.
+
+---
+
+## Cambiare le chiavi delle notifiche
+
+Da fare se la chiave privata è finita dove non doveva (una chat, uno screenshot).
+
+1. GitHub → scheda **Actions** → **Cambia le chiavi delle notifiche** → **Run workflow**.
+   Genera le chiavi nuove, le salva nei Secrets di Supabase e ripubblica l'app.
+   La chiave privata non viene mai mostrata.
+2. Appena finisce (un paio di minuti), **apri Aegis sul telefono**: si accorge
+   che la chiave è cambiata e rifà l'iscrizione da sola. Fino a quel momento i
+   promemoria verso quel telefono non arrivano.
+
+Vale per ogni dispositivo su cui sono attivi i promemoria: ciascuno si riallinea
+alla sua prima apertura.

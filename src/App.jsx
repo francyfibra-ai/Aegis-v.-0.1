@@ -14,6 +14,7 @@ import MascheraConferma from './components/MascheraConferma.jsx'
 import { ascoltaAccesso, utenteAttuale } from './lib/supabase.js'
 import { impostaUtente, inLinea } from './lib/archivio.js'
 import { supabaseConfigurato } from './lib/configurazione.js'
+import { riallineaIscrizione } from './lib/push.js'
 
 // Le voci della barra in fondo allo schermo.
 const VISTE = [
@@ -66,6 +67,9 @@ export default function App() {
       setUtente(chi)
       impostaUtente(chi) // dice all'archivio quale modalita' usare
       setAccessoVerificato(true)
+      // Se le chiavi delle notifiche sono cambiate, il telefono si
+      // reiscrive da solo con quella nuova.
+      if (chi) riallineaIscrizione()
     })
 
     // Scatta quando entri, quando esci, e anche quando l'accesso
