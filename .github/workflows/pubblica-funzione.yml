@@ -48,7 +48,9 @@ jobs:
             echo "Vedi docs/04-notifiche.md, sezione 'Pubblicare la sveglia da GitHub'."
             exit 1
           fi
-          supabase functions deploy promemoria --project-ref zikfldmqdsacywvxiuab
+          # --yes: le versioni recenti chiedono conferma prima di pubblicare,
+          # e qui non c'e' nessuno a rispondere. Senza, si ferma senza fare niente.
+          supabase functions deploy promemoria --project-ref zikfldmqdsacywvxiuab --yes
 
       - name: Indirizzo della funzione
         run: |
