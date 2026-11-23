@@ -26,9 +26,10 @@ import {
 } from '../lib/archivio.js'
 import { usaEventi, usaRisposte } from '../lib/hooks.js'
 import { iscrittoAllePush } from '../lib/push.js'
+import { usaStatoSveglia, daQuanto } from '../lib/sveglia.js'
 import EditorEvento from './EditorEvento.jsx'
 
-export default function PaginaPiano({ vaiAlPeso, eventoDaNotifica }) {
+export default function PaginaPiano({ vaiAlPeso, eventoDaNotifica, utente }) {
   const { eventi, caricamento } = usaEventi()
   const { risposte } = usaRisposte()
 
@@ -51,6 +52,10 @@ export default function PaginaPiano({ vaiAlPeso, eventoDaNotifica }) {
   useEffect(() => {
     iscrittoAllePush().then(setPromemoriaAttivi)
   }, [])
+
+  // La sveglia sta girando? Lo chiediamo solo se ha senso: con l'accesso
+  // fatto e i promemoria accesi su questo dispositivo.
+  const sveglia = usaStatoSveglia(Boolean(utente) && promemoriaAttivi)
 
   const oggi = giornoDiOggi()
   const dataDiOggi = dataInTesto()
@@ -138,6 +143,18 @@ export default function PaginaPiano({ vaiAlPeso, eventoDaNotifica }) {
       </div>
 
       {errore && <p className="errore">{errore}</p>}
+
+      {/* La sveglia e' ferma: i promemoria non stanno partendo.
+          E' in cima e in rosso perche' e' l'unico modo di saperlo:
+          una notifica che non arriva non fa rumore. */}
+      {sveglia.stato === 'ferma' && (
+        <div className="avviso-sveglia" role="alert">
+          <strong>⚠️ I promemoria non stanno partendo</strong>
+          <p>
+            La sveglia non risponde {daQuanto(sveglia.minutiDaUltimoOk)}. {sveglia.motivo}
+          </p>
+        </div>
+      )}
 
       {/* Promemoria non ancora attivi: lo diciamo dove si inseriscono
           gli orari, che e' il punto in cui uno se lo aspetta.

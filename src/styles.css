@@ -870,3 +870,18 @@ code {
   font-size: 14.5px;
   cursor: pointer;
 }
+
+/* ==================================================================
+   Avviso "la sveglia e' ferma", in cima al Piano
+   ================================================================== */
+.avviso-sveglia {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.45);
+  color: #ffd6d6;
+  font-size: 14px;
+}
+.avviso-sveglia strong { display: block; color: #ffe3e3; font-size: 15px; }
+.avviso-sveglia p { margin: 4px 0 0; }

@@ -149,6 +149,7 @@ export default function App() {
         {schermata === 'piano' && (
           <PaginaPiano
             eventoDaNotifica={eventoDaNotifica?.id ?? null}
+            utente={utente}
             vaiAlPeso={() => setSchermata('peso')}
           />
         )}

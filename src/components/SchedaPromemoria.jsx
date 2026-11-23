@@ -9,12 +9,16 @@
 */
 import { useEffect, useState } from 'react'
 import { attivaPromemoria, disattivaPromemoria, iscrittoAllePush } from '../lib/push.js'
+import { usaStatoSveglia, daQuanto } from '../lib/sveglia.js'
 
 export default function SchedaPromemoria({ utente }) {
   const [attivi, setAttivi] = useState(false)
   const [caricamento, setCaricamento] = useState(true)
   const [inCorso, setInCorso] = useState(false)
   const [errore, setErrore] = useState('')
+
+  // Lo stato della sveglia, sul server: ha senso chiederlo solo con l'accesso.
+  const sveglia = usaStatoSveglia(Boolean(utente))
 
   useEffect(() => {
     iscrittoAllePush().then((stato) => {
@@ -63,6 +67,25 @@ export default function SchedaPromemoria({ utente }) {
         <p className="nota">
           Riceverai una notifica agli orari del tuo piano, anche ad app chiusa.
         </p>
+
+        {sveglia.stato === 'ok' && (
+          <div className="controllo ok">
+            <span className="pallino" aria-hidden="true" />
+            <span>
+              <strong>La sveglia sta girando</strong>
+              <span className="nota"> · ultimo giro {sveglia.minutiDaUltimoOk === 0 ? 'meno di un minuto fa' : `${sveglia.minutiDaUltimoOk} min fa`}</span>
+            </span>
+          </div>
+        )}
+        {sveglia.stato === 'ferma' && (
+          <div className="controllo ko">
+            <span className="pallino" aria-hidden="true" />
+            <span>
+              <strong>La sveglia è ferma {daQuanto(sveglia.minutiDaUltimoOk)}</strong>
+              <span className="nota"> · {sveglia.motivo}</span>
+            </span>
+          </div>
+        )}
         <p className="nota">
           Se ne vuoi anche sul tablet o su un altro telefono, apri Aegis da lì e
           attivali di nuovo: ogni dispositivo si registra per conto suo.

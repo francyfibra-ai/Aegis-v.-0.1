@@ -241,3 +241,20 @@ Da fare se la chiave privata è finita dove non doveva (una chat, uno screenshot
 
 Vale per ogni dispositivo su cui sono attivi i promemoria: ciascuno si riallinea
 alla sua prima apertura.
+
+---
+
+## Sapere se la sveglia si è fermata
+
+Se la sveglia smette di girare, i promemoria non arrivano e nient'altro lo
+segnala. Per questo l'app controlla ogni due minuti, e ogni volta che la riapri,
+quando la sveglia ha avuto l'ultima risposta buona:
+
+- **in Setup**, nel riquadro dei promemoria, un pallino verde («La sveglia sta
+  girando») o rosso con il motivo;
+- **in cima al Piano**, un avviso rosso se è ferma da più di 5 minuti.
+
+Il controllo usa la funzione `stato_sveglia()`, da installare una volta sola
+incollando `supabase/stato-sveglia.sql` nel SQL Editor. Restituisce solo orari e
+un codice numerico, e la può chiamare solo chi ha fatto l'accesso. Se non è
+installata, l'app semplicemente non mostra né il pallino né l'avviso.

@@ -58,7 +58,8 @@ flowchart LR
 1. **L'app** è una PWA: una pagina web che si installa sul telefono come un'app vera, con icona, schermo intero e notifiche. Non passa dal Play Store.
 2. **Il database** (Supabase) conserva piano, risposte e pesate. Ogni riga è visibile solo a chi l'ha creata.
 3. **La sveglia** gira ogni minuto dentro il database (`pg_cron`) e chiama la funzione `promemoria`. La funzione guarda quali eventi sono appena scattati e manda la notifica a tutti i dispositivi iscritti. Le notifiche partono con urgenza alta, così Android non le trattiene quando il telefono è a riposo.
-4. **Se un invio non riesce**, la sveglia riprova al giro dopo, fino a 10 minuti dall'orario. Oltre si rinuncia: un promemoria del pranzo a metà pomeriggio sarebbe solo fastidio.
+4. **Se la sveglia si ferma**, l'app se ne accorge: oltre 5 minuti senza un giro andato a buon fine, in cima al Piano compare un avviso rosso con il motivo (segreto sbagliato, funzione mancante o in errore, programmazione spenta).
+5. **Se un invio non riesce**, la sveglia riprova al giro dopo, fino a 10 minuti dall'orario. Oltre si rinuncia: un promemoria del pranzo a metà pomeriggio sarebbe solo fastidio.
 
 Spiegazione completa in [docs/architettura.md](docs/architettura.md).
 
@@ -106,6 +107,7 @@ Le altre scelte, con le alternative scartate, sono in [docs/scelte-tecniche.md](
 │       ├── archivioLocale.js       …nella memoria del telefono
 │       ├── archivioRemoto.js       …nel database online
 │       ├── push.js                 iscrizione del dispositivo alle notifiche
+│       ├── sveglia.js              «la sveglia sta girando?»
 │       └── statistichePeso.js      i conti dietro al grafico
 │
 ├── public/
@@ -116,6 +118,7 @@ Le altre scelte, con le alternative scartate, sono in [docs/scelte-tecniche.md](
 │   ├── schema.sql                  tabelle e regole di protezione
 │   ├── schema-notifiche.sql        iscrizioni e storico degli invii
 │   ├── cron.sql                    la sveglia
+│   ├── stato-sveglia.sql           permette all'app di sapere se la sveglia gira
 │   └── functions/promemoria/       la funzione che manda i promemoria
 │
 ├── .github/workflows/              pubblicazione automatica e cambio chiavi
@@ -178,7 +181,6 @@ L'app online si aggiorna da sola a ogni modifica su GitHub. Vive nella sottocart
 | 5 | Conferma Fatto / Saltato | ✅ |
 
 **Dopo la v0.1, le idee in fila:**
-- un avviso nell'app se la sveglia smette di girare;
 - una copia dei dati sul telefono per quando manca la rete, che si sincronizza al ritorno della connessione.
 
 Aegis v0.1 è il primo tassello di un sistema più ampio. Questa versione fa una cosa sola, e la fa per bene.
