@@ -55,7 +55,8 @@ jobs:
             echo "::error::Manca il segreto SUPABASE_ACCESS_TOKEN nelle impostazioni della repository."
             exit 1
           fi
-          supabase secrets set --env-file "$RUNNER_TEMP/vapid.env" --project-ref zikfldmqdsacywvxiuab
+          # --yes: senza, Supabase chiede conferma e da qui nessuno puo' rispondere.
+          supabase secrets set --env-file "$RUNNER_TEMP/vapid.env" --project-ref zikfldmqdsacywvxiuab --yes
           # Il file con la chiave privata non serve piu': via subito.
           shred -u "$RUNNER_TEMP/vapid.env"
 
