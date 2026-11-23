@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import PaginaPiano from './components/PaginaPiano.jsx'
 import PaginaPeso from './components/PaginaPeso.jsx'
 import PaginaSetup from './components/PaginaSetup.jsx'
+import MascheraConferma from './components/MascheraConferma.jsx'
 import { ascoltaAccesso, utenteAttuale } from './lib/supabase.js'
 import { impostaUtente, inLinea } from './lib/archivio.js'
 import { supabaseConfigurato } from './lib/configurazione.js'
@@ -37,8 +38,22 @@ export default function App() {
   // "i dati sono solo sul telefono" a chi in realta' e' collegato.
   const [accessoVerificato, setAccessoVerificato] = useState(!supabaseConfigurato())
 
-  // L'evento su cui aprire il Piano, arrivando da una notifica.
+  // L'evento della notifica toccata: { id, n } oppure null.
+  // "n" cresce a ogni tocco, cosi' anche toccare due volte la notifica
+  // dello stesso evento riapre la maschera di conferma.
   const [eventoDaNotifica, setEventoDaNotifica] = useState(null)
+  const arrivaDaNotifica = (id) =>
+    setEventoDaNotifica((prima) => (id ? { id, n: (prima?.n ?? 0) + 1 } : prima))
+
+  // Cambia ogni volta che chiediamo di aprire il campo dei chili:
+  // forza la schermata Peso a ripartire con il campo aperto, anche se
+  // eri gia' li'.
+  const [aperturaPeso, setAperturaPeso] = useState(0)
+  function vaiARegistrarePeso() {
+    setSchermata('peso')
+    setApriEditorPeso(true)
+    setAperturaPeso((n) => n + 1)
+  }
 
   // --- Accesso: leggiamo la situazione all'avvio e restiamo in ascolto ---
   useEffect(() => {
@@ -76,11 +91,12 @@ export default function App() {
       if (evento.data?.tipo === 'apri-evento') {
         const dati = evento.data.dati || {}
         if (dati.tipo === 'peso') {
-          setSchermata('peso')
-          setApriEditorPeso(true)
+          vaiARegistrarePeso()
         } else {
+          // Si apre il Piano e sopra compare la maschera che chiede
+          // se l'hai fatto.
           setSchermata('piano')
-          setEventoDaNotifica(dati.eventoId || null)
+          arrivaDaNotifica(dati.eventoId)
         }
       }
     }
@@ -91,7 +107,7 @@ export default function App() {
     const parametri = new URLSearchParams(window.location.search)
 
     if (parametri.get('evento')) {
-      setEventoDaNotifica(parametri.get('evento'))
+      arrivaDaNotifica(parametri.get('evento'))
     }
 
     // La notifica del peso porta direttamente sulla schermata giusta,
@@ -128,13 +144,24 @@ export default function App() {
       <main>
         {schermata === 'piano' && (
           <PaginaPiano
-            eventoDaNotifica={eventoDaNotifica}
+            eventoDaNotifica={eventoDaNotifica?.id ?? null}
             vaiAlPeso={() => setSchermata('peso')}
           />
         )}
-        {schermata === 'peso' && <PaginaPeso apriSubitoEditor={apriEditorPeso} />}
+        {schermata === 'peso' && (
+          <PaginaPeso key={aperturaPeso} apriSubitoEditor={apriEditorPeso} />
+        )}
         {schermata === 'setup' && <PaginaSetup utente={utente} />}
       </main>
+
+      {/* --- La maschera "l'hai fatto?", sopra a tutto ---
+          Compare toccando una notifica, e anche aprendo l'app da soli
+          se ci sono eventi di oggi gia' passati e senza risposta. */}
+      <MascheraConferma
+        eventoDaNotifica={eventoDaNotifica}
+        nascosta={schermata === 'peso'}
+        onRegistraPeso={vaiARegistrarePeso}
+      />
 
       {/* --- Barra di navigazione in basso, comoda col pollice --- */}
       <nav className="barra-navigazione">
@@ -142,7 +169,11 @@ export default function App() {
           <button
             key={vista.id}
             className={'voce-nav' + (schermata === vista.id ? ' attiva' : '')}
-            onClick={() => setSchermata(vista.id)}
+            onClick={() => {
+              // Aprendo la scheda a mano non si riapre il campo dei chili
+              setApriEditorPeso(false)
+              setSchermata(vista.id)
+            }}
             aria-current={schermata === vista.id ? 'page' : undefined}
           >
             <span aria-hidden="true">{vista.emoji}</span>

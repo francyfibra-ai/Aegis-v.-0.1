@@ -25,7 +25,7 @@ const BASE = new URL('./', self.location).pathname
 
 // Cambia questo numero ogni volta che modifichi il file:
 // serve ad Android per accorgersi che c'e' una versione nuova.
-const VERSIONE = 'aegis-sw-v6'
+const VERSIONE = 'aegis-sw-v7'
 
 // --- 1. Installazione -------------------------------------------------
 // Viene eseguita la prima volta che il service worker viene registrato.
@@ -110,8 +110,8 @@ self.addEventListener('notificationclick', (event) => {
         parametri.set('vista', 'peso')
         parametri.set('registra', '1')
       } else if (dati.eventoId) {
-        // Per gli altri, si apre il Piano con l'evento evidenziato:
-        // i pulsanti Fatto/Saltato sono li' accanto.
+        // Per gli altri, si apre il Piano e sopra compare la maschera
+        // che chiede se l'hai fatto (MascheraConferma.jsx).
         parametri.set('vista', 'piano')
         parametri.set('evento', dati.eventoId)
       }

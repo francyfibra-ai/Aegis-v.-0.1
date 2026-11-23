@@ -775,3 +775,98 @@ code {
 @media (max-width: 380px) {
   .controlli-risposta { padding-left: 0; }
 }
+
+/* ==================================================================
+   Maschera "l'hai fatto?" (MascheraConferma.jsx)
+   Al centro dello schermo e non dal basso: non e' un modulo da
+   compilare, e' una domanda sola.
+   ================================================================== */
+
+.velo-conferma {
+  align-items: center;
+  padding: 16px;
+  z-index: 60; /* sopra anche al pannello di modifica */
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.maschera-conferma {
+  width: 100%;
+  max-width: 400px;
+  background: var(--scheda);
+  border: 1px solid var(--bordo);
+  border-radius: 20px;
+  padding: 18px 18px 12px;
+  text-align: center;
+  animation: sali 0.18s ease-out;
+}
+
+.conferma-contatore {
+  margin: 0 0 14px;
+  font-size: 12px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+.conferma-evento {
+  padding: 18px 12px;
+  border-radius: 14px;
+  background: #101a24;
+  border-top: 4px solid var(--colore-tipo, var(--accento));
+}
+
+.conferma-emoji { font-size: 34px; line-height: 1; }
+
+.conferma-evento h2 {
+  font-size: 21px;
+  margin: 10px 0 2px;
+}
+
+.conferma-evento .nota { margin: 0; }
+
+.conferma-domanda {
+  margin: 18px 0 12px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.conferma-pulsanti {
+  display: flex;
+  gap: 10px;
+}
+
+.conferma-pulsante {
+  flex: 1;
+  min-height: 56px; /* comodi col pollice, anche di fretta */
+  border-radius: 12px;
+  border: 1px solid var(--bordo);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.conferma-pulsante.fatto {
+  background: #0ca30c;
+  border-color: #0ca30c;
+  color: #04121f;
+}
+
+.conferma-pulsante.saltato {
+  background: #43535f;
+  border-color: #43535f;
+  color: var(--testo);
+}
+
+.conferma-pulsante:disabled { opacity: .6; }
+
+.conferma-dopo {
+  margin-top: 8px;
+  width: 100%;
+  min-height: 44px;
+  background: none;
+  border: 0;
+  color: var(--testo-tenue);
+  font: inherit;
+  font-size: 14.5px;
+  cursor: pointer;
+}

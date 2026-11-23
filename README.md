@@ -44,6 +44,7 @@ Aegis/
 │   │   ├── PaginaSetup.jsx     Diagnostica e copie di sicurezza
 │   │   ├── EditorEvento.jsx    Pannello per aggiungere/modificare un evento
 │   │   ├── EditorPesata.jsx    Pannello per registrare una pesata
+│   │   ├── MascheraConferma.jsx La domanda "l'hai fatto?" sopra l'app
 │   │   └── GraficoPeso.jsx     Il grafico, disegnato a mano in SVG
 │   └── lib/
 │       ├── modello.js          FORMA DEI DATI: com'è fatto un evento
@@ -116,9 +117,17 @@ L'elenco è anche dentro l'app: `src/lib/fasi.js`.
 
 ## Come si risponde a un promemoria
 
-**La notifica ricorda soltanto: non ha pulsanti.** Si risponde nell'app, dagli
-eventi di oggi nella schermata *Piano*, con **Fatto** o **Saltato**. Toccando di
-nuovo lo stesso pulsante la risposta si annulla.
+**La notifica ricorda soltanto: non ha pulsanti.** Toccandola si apre Aegis con
+sopra una **maschera** che chiede *«L'hai fatto?»*: **Fatto** o **Saltato**.
+
+La stessa maschera compare anche **aprendo l'app da soli**, se oggi ci sono
+eventi già passati a cui non hai risposto: la conferma non va persa anche se la
+notifica l'hai ignorata. Se sono più d'uno si passano uno alla volta.
+**Più tardi** la chiude senza registrare niente; torna alla prossima apertura.
+Il codice è in `src/components/MascheraConferma.jsx`.
+
+Le risposte si possono sempre correggere dagli eventi di oggi nella schermata
+*Piano*: toccando di nuovo lo stesso pulsante la risposta si annulla.
 
 > **Perché non si risponde dalla notifica.** All'inizio i pulsanti c'erano.
 > Sono stati tolti dopo una verifica sul dispositivo: erano dichiarati
