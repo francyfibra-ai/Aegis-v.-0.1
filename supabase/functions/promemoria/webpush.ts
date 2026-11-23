@@ -295,6 +295,21 @@ export async function invia(
       'Content-Encoding': 'aes128gcm',
       'Content-Type': 'application/octet-stream',
       TTL: String(durataSecondi),
+      /*
+        URGENCY: HIGH - senza questa riga i promemoria arrivavano anche
+        con 30 minuti e piu' di ritardo.
+
+        Se non la si indica, il servizio push di Google tratta il
+        messaggio come "normale". Con il telefono fermo e lo schermo
+        spento, Android va in risparmio energetico (Doze) e i messaggi
+        normali li tiene da parte, consegnandoli tutti insieme alla
+        prossima "finestra" - che puo' arrivare dopo mezz'ora o piu'.
+
+        "high" chiede di svegliare il telefono subito. E' pensata
+        proprio per i messaggi che l'utente deve vedere al momento,
+        come un promemoria: non va usata per aggiornamenti silenziosi.
+      */
+      Urgency: 'high',
     },
     body: comeBuffer(corpo),
   })
