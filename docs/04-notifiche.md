@@ -127,7 +127,7 @@ Nel pannello della funzione c'è un riquadro per invocarla. In alternativa, da
 un computer:
 
 ```
-curl -X POST "https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/nome-promemoria?prova=1" \
+curl -X POST "https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/promemoria?prova=1" \
   -H "apikey: LA_CHIAVE_PUBBLICA" \
   -H "x-aegis-segreto: IL_TUO_SEGRETO"
 ```
@@ -136,7 +136,7 @@ Oppure, senza uscire dal pannello, dal **SQL Editor**:
 
 ```sql
 select net.http_post(
-  url := 'https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/nome-promemoria?prova=1',
+  url := 'https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/promemoria?prova=1',
   headers := jsonb_build_object(
     'apikey', 'LA_CHIAVE_PUBBLICA',
     'x-aegis-segreto', 'IL_TUO_SEGRETO'

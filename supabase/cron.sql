@@ -15,7 +15,11 @@
 -- Supabase, sezione Edge Functions. Se non coincide, la sveglia
 -- chiama un indirizzo inesistente e riceve 404 a ogni giro, senza
 -- che nulla lo segnali nell'app.
--- Qui e' impostato su 'nome-promemoria', il nome effettivamente usato.
+-- Qui e' impostato su 'promemoria': e' il nome con cui la pubblica
+-- GitHub (.github/workflows/pubblica-funzione.yml) e quello scritto in
+-- supabase/config.toml. In passato la sveglia chiamava una copia
+-- incollata a mano, 'nome-promemoria', che gli aggiornamenti da GitHub
+-- non toccavano.
 
 -- Due estensioni di PostgreSQL:
 --   pg_cron  sa eseguire qualcosa a orari stabiliti
@@ -34,7 +38,7 @@ select cron.schedule(
   '* * * * *',
   $$
     select net.http_post(
-      url := 'https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/nome-promemoria',
+      url := 'https://zikfldmqdsacywvxiuab.supabase.co/functions/v1/promemoria',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
         -- Il portone di Supabase pretende delle credenziali prima di
