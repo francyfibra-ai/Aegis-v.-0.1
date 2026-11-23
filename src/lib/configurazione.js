@@ -44,7 +44,7 @@ export const SUPABASE_CHIAVE_PUBBLICA = 'sb_publishable_enjVIUKuaDY_bBvJeK0NNw_8
   rifatte da ogni dispositivo.
 */
 export const VAPID_CHIAVE_PUBBLICA =
-  'BMTcVq-gMaVSci9uCvjB25s9c9BHCelyx8VAitTrR1YA8h22JXgxdIMP2YI5aKOhZ017l45D1vVxzBQMECqIfF8'
+  'BOAILQISRCPO3zcz0uqhYLr1NsqjgkJbzJKFgCEUwI-x_TF-R46szmgYUEAkbwAdFwPf30hPlqGYW1enqBja4pc'
 
 /** Dice se le notifiche push sono state configurate. */
 export function pushConfigurato() {
